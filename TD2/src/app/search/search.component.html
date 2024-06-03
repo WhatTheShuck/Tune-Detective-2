@@ -1,0 +1,4 @@
+<div class="search-container">
+  <input type="text" [(ngModel)]="searchTerm" placeholder="Enter artist name" (keyup.enter)="searchArtist()">
+  <button (click)="searchArtist()">Search</button>
+</div>
