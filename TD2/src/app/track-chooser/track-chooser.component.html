@@ -1,4 +1,8 @@
-<h2 mat-dialog-title>Track List</h2>
+<h2 mat-dialog-title>Track List
+  <button mat-icon-button class="close-button" (click)="onClose()">
+    <mat-icon>close</mat-icon>
+  </button>
+</h2>
 <mat-dialog-content>
   <mat-list>
     @for (track of data.tracks; track track) {
@@ -10,6 +14,3 @@
     }
   </mat-list>
 </mat-dialog-content>
-<mat-dialog-actions align="end">
-  <button mat-button (click)="onClose()">Close</button>
-</mat-dialog-actions>

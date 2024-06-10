@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -22,6 +22,8 @@ export interface Album {
 })
 export class AlbumChooserComponent {
   constructor(
+    private http: HttpClient,
+    private dialog: MatDialog,
     public dialogRef: MatDialogRef<AlbumChooserComponent>,
     @Inject(MAT_DIALOG_DATA) public albums: Album[]
     ) {
@@ -34,20 +36,31 @@ export class AlbumChooserComponent {
 
 
   onSelect(album: Album) {
-    this.dialogRef.close(album.id);
+    this.dialogRef.close(album);
     this.dialogRef.afterClosed().subscribe(selectedAlbum => {
       if (selectedAlbum) {
-        this.fetchTracks(selectedAlbum);
+        this.fetchTracks(selectedAlbum.id, selectedAlbum.cover);
       }
     });
   }
 
-  fetchTracks(albumID: number) {
-
+  fetchTracks(albumID: number, albumCover: string) {
+    const apiUrl = `/api/album/${albumID}/tracks`;
+    this.http.get<any>(apiUrl).subscribe(
+      (response: any) => {
+        const tracks = response.data;
+        this.openTrackChooser(tracks, albumCover);
+      },
+      (error) => {
+        console.error('API error:', error);
+      }
+    );
   }
 
-  openTrackChooser() {
-
+  openTrackChooser(tracks: any[], albumCover: string) {
+    this.dialog.open(TrackChooserComponent, {
+      data: {tracks, albumCover},
+    });
   }
 
   onClose() {

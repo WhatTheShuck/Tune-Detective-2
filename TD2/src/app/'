@@ -27,32 +27,28 @@ interface DialogData {
   templateUrl: './track-chooser.component.html',
   styleUrl: './track-chooser.component.css'
 })
-export class TrackChooserComponent  {
-  private audioRef: HTMLAudioElement | null = null;
-  constructor(
-  public dialogRef: MatDialogRef<TrackChooserComponent>,
-  @Inject(MAT_DIALOG_DATA) public data: DialogData
-  ) {this.dialogRef.beforeClosed().subscribe(() => {
-      this.stopPreview();
-    });}
+export class TrackChooserComponent {
+    constructor(
+    public dialogRef: MatDialogRef<TrackChooserComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: DialogData
+  ) {}
 
 
   onClose() {
     this.dialogRef.close();
-    this.stopPreview();
+    dialogClosed = true;
   }
 
- playPreview(previewUrl: string) {
-    this.stopPreview();
-    this.audioRef = new Audio(previewUrl);
-    this.audioRef.play();
-  }
-
-  stopPreview() {
-    if (this.audioRef) {
-      this.audioRef.pause();
-      this.audioRef.currentTime = 0;
-      this.audioRef = null;
+  playPreview(previewUrl: string) {
+    const audio = new Audio(previewUrl);
+    audio.play();
+    while (1==1) {
+      if (dialogClosed == true) {
+      dialogClosed = false;
+      audio.pause();
+      break;
+    }
     }
   }
+
 }
