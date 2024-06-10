@@ -17,7 +17,6 @@ interface DialogData {
   tracks: Track[];
   albumCover: string;
 }
-  var dialogClosed: boolean = false;
 
 
 @Component({

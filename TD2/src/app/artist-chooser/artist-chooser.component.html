@@ -8,7 +8,12 @@
     @for (artist of artists; track artist) {
     <mat-list-item (click)="onSelect(artist)" >
       <img matListItemAvatar [src]="artist.picture" alt="Artist picture" >
-      <div matListItemTitle>{{ artist.name }} </div>
+      <div matListItemTitle>{{ artist.name }}
+      <button mat-icon-button (click)="toggleTrackArtist(artist, $event)" matTooltip="Track Artist" style="float: right">
+        <mat-icon [color]="isArtistTracked(artist) ? 'accent' : 'default'">star</mat-icon>
+      </button>
+      </div>
+      <p matListItemLine>Albums: {{artist.nb_album}}</p>
     </mat-list-item>
     }
   </mat-list>

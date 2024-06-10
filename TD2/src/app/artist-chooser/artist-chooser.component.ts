@@ -28,4 +28,28 @@ export class ArtistChooserComponent {
   onCancel() {
     this.dialogRef.close();
   }
-}
+    toggleTrackArtist(artist: Artist, event: Event) {
+    event.stopPropagation();
+    const trackedArtists = this.getTrackedArtists();
+    const index = trackedArtists.indexOf(artist.id);
+    if (index > -1) {
+      trackedArtists.splice(index, 1);
+    } else {
+      trackedArtists.push(artist.id);
+    }
+    this.saveTrackedArtists(trackedArtists);
+  }
+
+  isArtistTracked(artist: Artist): boolean {
+    const trackedArtists = this.getTrackedArtists();
+    return trackedArtists.includes(artist.id);
+  }
+
+  private getTrackedArtists(): number[] {
+    const trackedArtistsJson = localStorage.getItem('trackedArtists');
+    return trackedArtistsJson ? JSON.parse(trackedArtistsJson) : [];
+  }
+
+  private saveTrackedArtists(trackedArtists: number[]) {
+    localStorage.setItem('trackedArtists', JSON.stringify(trackedArtists));
+  }}
