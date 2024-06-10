@@ -1,0 +1,18 @@
+<h2 mat-dialog-title>Albums
+    Albums
+  <button mat-icon-button class="close-button" (click)="onClose()">
+    <mat-icon>close</mat-icon>
+  </button>
+</h2>
+<mat-dialog-content>
+  <mat-list>
+    @for (album of albums; track album ) {
+
+    <mat-list-item (click)="onSelect(album)">
+      <img matListItemAvatar [src]="album.cover" alt="Album cover">
+      <div matListItemTitle>{{ album.title }}</div>
+      <p matListItemLine>Released: {{ album.release_date }}</p>
+    </mat-list-item>
+    }
+  </mat-list>
+</mat-dialog-content>

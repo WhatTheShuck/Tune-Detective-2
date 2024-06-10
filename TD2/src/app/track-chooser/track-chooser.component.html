@@ -1,0 +1,15 @@
+<h2 mat-dialog-title>Track List</h2>
+<mat-dialog-content>
+  <mat-list>
+    @for (track of data.tracks; track track) {
+    <mat-list-item >
+      <img matListItemAvatar [src]="data.albumCover" alt="Album cover" (click)="playPreview(track.preview)">
+      <div matListItemTitle>{{ track.title }}</div>
+      <p matListItemLine>{{ track.artist.name }}</p>
+    </mat-list-item>
+    }
+  </mat-list>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onClose()">Close</button>
+</mat-dialog-actions>

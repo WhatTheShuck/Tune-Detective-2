@@ -1,0 +1,14 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 50px;
+}
+
+.app-title {
+  margin-bottom: 30px;
+}
+
+.search-container {
+  margin-top: 30px;
+}
