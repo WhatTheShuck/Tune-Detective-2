@@ -8,10 +8,11 @@ import { ArtistChooserComponent } from './artist-chooser/artist-chooser.componen
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, SearchComponent],
+  imports: [RouterOutlet, SearchComponent, RouterModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
 export class AppComponent {
-  title = 'TD2';
+  title = 'Tune Detective 2';
+
 }

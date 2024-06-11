@@ -1,7 +1,13 @@
+<nav>
+  <ul>
+    <li><a [routerLink]="['']">Search</a></li>
+    <li><a [routerLink]="['releases']">Releases</a></li>
+    <li><a [routerLink]="['about']">About</a></li>
+  </ul>
+</nav>
 <div class="app-container">
-  <h2 class="app-title">Tune Detective 2</h2>
-  <div class="search-container">
-    <app-search />
+  <h2 class="app-title">{{title}}</h2>
+  <div class="search-container" >
+    <router-outlet />
   </div>
 </div>
-<router-outlet />

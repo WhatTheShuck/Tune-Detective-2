@@ -12,3 +12,29 @@
 .search-container {
   margin-top: 30px;
 }
+nav {
+  background-color: #f2f2f2;
+  padding: 10px;
+}
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+li {
+  margin-right: 10px;
+}
+
+@media screen and (max-width: 600px) {
+  ul {
+    flex-direction: column;
+  }
+
+  li {
+    margin-bottom: 10px;
+  }
+}

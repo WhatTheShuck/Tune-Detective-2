@@ -1,12 +1,88 @@
-import { Component } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatListModule } from '@angular/material/list';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { CommonModule } from '@angular/common';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { Artist } from '../artist.interface';
+import { Album } from '../album-chooser/album-chooser.component';
 
 @Component({
   selector: 'app-releases',
   standalone: true,
-  imports: [],
+  imports: [CommonModule, MatListModule, MatButtonModule, MatIconModule, MatDialogModule, HttpClientModule],
   templateUrl: './releases.component.html',
   styleUrl: './releases.component.css'
 })
-export class ReleasesComponent {
+export class ReleasesComponent implements OnInit {
+  releases: Album[] = [];
+  constructor(private http: HttpClient) {}
 
+  ngOnInit() {
+    this.loadTrackedArtists();
+  }
+
+  loadTrackedArtists() {
+    const trackedArtistsJson = localStorage.getItem('trackedArtists');
+    if (trackedArtistsJson) {
+      const trackedArtistIds = JSON.parse(trackedArtistsJson);
+      trackedArtistIds.forEach((artistId: number) => {
+        this.fetchRecentAlbum(artistId);
+      });
+    }
+  }
+
+  fetchRecentAlbum(artistId: number) {
+    const apiUrl = `/api/artist/${artistId}/albums`;
+
+    this.http.get<any>(apiUrl).subscribe(
+      (response: any) => {
+        const albums: Album[] = response.data;
+        albums.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+        if (albums.length > 0) {
+          this.releases.push(albums[0]);
+        }
+      },
+      (error) => {
+        console.error('API error:', error);
+      }
+    );
+  }
+
+  exportTrackedArtists() {
+    const trackedArtistsJson = localStorage.getItem('trackedArtists');
+    if (trackedArtistsJson) {
+      const trackedArtists = JSON.parse(trackedArtistsJson);
+      const blob = new Blob([JSON.stringify(trackedArtists)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'tracked-artists.json';
+      link.click();
+    }
+  }
+
+  importTrackedArtists() {
+    // Trigger file input dialog
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.json';
+    fileInput.onchange = (event: Event) => {
+      const target = event.target as HTMLInputElement;
+      if (target.files && target.files.length > 0) {
+        const file = target.files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+          const trackedArtistsJson = reader.result as string;
+          const trackedArtists = JSON.parse(trackedArtistsJson);
+          // Save the imported tracked artists to local storage
+          localStorage.setItem('trackedArtists', JSON.stringify(trackedArtists));
+          this.loadTrackedArtists();
+        };
+        reader.readAsText(file);
+      }
+    };
+    fileInput.click();
+  }
 }

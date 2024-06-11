@@ -1,1 +1,12 @@
-<p>releases works!</p>
+<h2>Tracked Artists</h2>
+<mat-list>
+  @for (release of releases; track release.id ) {
+  <mat-list-item>
+    <img matListItemAvatar [src]="release.cover" alt="Album Cover">
+    <div matLine>{{ release.title }}</div>
+    <div matLine>{{ release.artist }}</div>
+  </mat-list-item>
+  }
+</mat-list>
+<button mat-raised-button (click)="exportTrackedArtists()">Export</button>
+<button mat-raised-button (click)="importTrackedArtists()">Import</button>
