@@ -7,17 +7,18 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule, HttpClientJsonpModule } from '@angular/common/http';
 import { Artist } from '../artist.interface';
 import { Album } from '../album-chooser/album-chooser.component';
+import { TrackChooserComponent } from '../track-chooser/track-chooser.component';
 
 @Component({
   selector: 'app-releases',
   standalone: true,
-  imports: [CommonModule, MatListModule, MatButtonModule, MatIconModule, MatDialogModule, HttpClientModule, HttpClientJsonpModule],
+  imports: [CommonModule, MatListModule, MatButtonModule, MatIconModule, MatDialogModule, HttpClientModule, HttpClientJsonpModule, TrackChooserComponent],
   templateUrl: './releases.component.html',
   styleUrl: './releases.component.css'
 })
 export class ReleasesComponent implements OnInit {
   releases: Album[] = [];
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private dialog: MatDialog) {}
 
   ngOnInit() {
     this.loadTrackedArtists();
@@ -43,6 +44,21 @@ export class ReleasesComponent implements OnInit {
         if (albums.length > 0) {
           this.releases.push(albums[0]);
         }
+      },
+      (error) => {
+        console.error('API error:', error);
+      }
+    );
+  }
+
+  openTrackChooser(albumID: number, albumCover: string) {
+    const apiUrl = `https://api.deezer.com/album/${albumID}/tracks&output=jsonp`;
+    this.http.jsonp(apiUrl, 'callback').subscribe(
+      (response: any) => {
+        const tracks = response.data;
+        this.dialog.open(TrackChooserComponent, {
+          data: { tracks, albumCover },
+        });
       },
       (error) => {
         console.error('API error:', error);

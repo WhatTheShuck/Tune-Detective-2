@@ -1,7 +1,7 @@
 <h2>Tracked Artists</h2>
 <mat-list>
   @for (release of releases; track release.id ) {
-  <mat-list-item>
+  <mat-list-item (click)="openTrackChooser(release.id, release.cover)">
     <img matListItemAvatar [src]="release.cover" alt="Album Cover">
     <div matLine>{{ release.title }}</div>
     <div matLine>{{ release.artist }}</div>

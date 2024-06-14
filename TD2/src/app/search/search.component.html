@@ -1,4 +1,10 @@
-<div class="search-container">
-  <input type="text" [(ngModel)]="searchTerm" placeholder="Enter artist name" (keyup.enter)="searchArtist()">
-  <button (click)="searchArtist()">Search</button>
-</div>
+<mat-form-field>
+  <mat-label>Enter Artist Name</mat-label>
+  <input matInput type="text" [(ngModel)]="searchTerm" (keyup.enter)="searchArtist()">
+  @if (searchTerm) {
+    <button matSuffix mat-icon-button aria-label="Search" (click)="searchArtist()">
+      <mat-icon>search</mat-icon>
+    </button>
+  }
+</mat-form-field>
+

@@ -1,5 +1,9 @@
 import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms'
+import {MatButtonModule} from '@angular/material/button';
+import {FormsModule} from '@angular/forms';
+import {MatIconModule} from '@angular/material/icon';
+import {MatInputModule} from '@angular/material/input';
+import {MatFormFieldModule} from '@angular/material/form-field';
 import { HttpClient, HttpClientJsonpModule, HttpClientModule } from '@angular/common/http';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Artist } from '../artist.interface';
@@ -9,7 +13,7 @@ import { AlbumChooserComponent, Album } from '../album-chooser/album-chooser.com
 @Component({
   selector: 'app-search',
   standalone: true,
-  imports: [FormsModule, HttpClientJsonpModule, HttpClientModule, MatDialogModule],
+  imports: [MatFormFieldModule, MatInputModule, FormsModule, MatButtonModule, MatIconModule, HttpClientJsonpModule, HttpClientModule, MatDialogModule],
   templateUrl: './search.component.html',
   styleUrl: './search.component.css'
 })
