@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms'
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientJsonpModule, HttpClientModule } from '@angular/common/http';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Artist } from '../artist.interface';
 import { ArtistChooserComponent} from '../artist-chooser/artist-chooser.component';
@@ -9,19 +9,19 @@ import { AlbumChooserComponent, Album } from '../album-chooser/album-chooser.com
 @Component({
   selector: 'app-search',
   standalone: true,
-  imports: [FormsModule, HttpClientModule, MatDialogModule],
+  imports: [FormsModule, HttpClientJsonpModule, HttpClientModule, MatDialogModule],
   templateUrl: './search.component.html',
   styleUrl: './search.component.css'
 })
 export class SearchComponent {
   searchTerm: string = '';
 
-  constructor(private http: HttpClient, private dialog: MatDialog) { } // Inject HttpClient
+  constructor(private http: HttpClient, private dialog: MatDialog) { }
 
   searchArtist() {
-    const apiUrl = `/api/search/artist?q=${this.searchTerm}`;
+    const apiUrl = `https://api.deezer.com/search/artist?q=${this.searchTerm}&output=jsonp`;
 
-    this.http.get(apiUrl).subscribe(
+    this.http.jsonp(apiUrl, 'callback').subscribe(
       (response: any) => {
         const artists: Artist[] = response.data;
         this.openArtistChooserDialog(artists);
@@ -44,9 +44,9 @@ export class SearchComponent {
     });
   }
   fetchAlbums(artistId: number) {
-    const apiUrl = `/api/artist/${artistId}/albums`;
+    const apiUrl = `https://api.deezer.com/artist/${artistId}/albums&output=jsonp`;
 
-    this.http.get<any>(apiUrl).subscribe(
+    this.http.jsonp(apiUrl, 'callback').subscribe(
       (response: any) => {
         const albums = response.data;
         this.openAlbumsChooser(albums);

@@ -17,7 +17,7 @@ export interface Album {
 @Component({
   selector: 'app-album-chooser',
   standalone: true,
-  imports: [CommonModule, MatListModule, MatButtonModule, MatIconModule, MatDialogModule, HttpClientModule],
+  imports: [CommonModule, MatListModule, MatButtonModule, MatIconModule, MatDialogModule, HttpClientModule], // confused why I don't need JSONP module here, but okay
   templateUrl: './album-chooser.component.html',
   styleUrl: './album-chooser.component.css'
 })
@@ -46,8 +46,8 @@ export class AlbumChooserComponent {
   }
 
   fetchTracks(albumID: number, albumCover: string) {
-    const apiUrl = `/api/album/${albumID}/tracks`;
-    this.http.get<any>(apiUrl).subscribe(
+    const apiUrl = `https://api.deezer.com/album/${albumID}/tracks&output=jsonp`;
+    this.http.jsonp(apiUrl, "callback").subscribe(
       (response: any) => {
         const tracks = response.data;
         this.openTrackChooser(tracks, albumCover);
