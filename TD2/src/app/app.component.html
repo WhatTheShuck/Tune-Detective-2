@@ -1,15 +1,13 @@
-<nav>
-  <ul>
-    <li><a [routerLink]="['']">Search</a></li>
-    <li><a [routerLink]="['releases']">Releases</a></li>
-    <li><a [routerLink]="['about']">About</a></li>
-  </ul>
-</nav>
-<body class="mat-app-background">
+@if (showSidebarNav) {
+  <app-sidebar-nav />
+}
 <div class="app-container">
   <h2 class="app-title">{{title}}</h2>
   <div class="search-container" >
     <router-outlet />
   </div>
+    <button (click)="toggleNavigationPreference()">Toggle Navigation Style</button>
 </div>
-</body>
+@if (showBottomNav) {
+  <app-bottom-nav />
+}
