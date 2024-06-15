@@ -1,12 +1,30 @@
-@if (showSidebarNav) {
+<mat-toolbar>
+  @if (showSidebarNav) {
+  <button mat-icon-button aria-label="Menu icon" (click)="showSidebarDrawer = !showSidebarDrawer" >
+    <mat-icon>menu</mat-icon>
+  </button>
+  @if (showSidebarDrawer)
+  {
   <app-sidebar-nav />
+  }
 }
+  <span>{{title}}</span>
+  <span class="spacer"></span>
+  <button mat-icon-button (click)="toggleNavigationPreference()" aria-label="Toggle Navigation Style">
+    @if (showSidebarNav) {
+    <mat-icon>mobile_off</mat-icon>
+    } @else {
+    <mat-icon>mobile_friendly</mat-icon>
+    }
+  </button>
+
+</mat-toolbar>
+
+
 <div class="app-container">
-  <h2 class="app-title">{{title}}</h2>
   <div class="search-container" >
     <router-outlet />
   </div>
-    <button (click)="toggleNavigationPreference()">Toggle Navigation Style</button>
 </div>
 @if (showBottomNav) {
   <app-bottom-nav />

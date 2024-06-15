@@ -2,16 +2,19 @@ import { Component, OnInit } from '@angular/core';
 import { Breakpoints, BreakpointObserver } from '@angular/cdk/layout'
 import { NavigationPreferenceService } from './navigation-preference.service';
 import { RouterOutlet, RouterModule } from '@angular/router';
+import {MatToolbarModule} from '@angular/material/toolbar';
 // import { SwPush } from '@angular/service-worker';
 import { SearchComponent } from './search/search.component';
 import { SidebarNavComponent } from './sidebar-nav/sidebar-nav.component';
 import { BottomNavComponent } from './bottom-nav/bottom-nav.component';
 import { Subscription } from 'rxjs';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, SearchComponent, RouterModule, SidebarNavComponent, BottomNavComponent],
+  imports: [RouterOutlet, SearchComponent, RouterModule, SidebarNavComponent, BottomNavComponent, MatToolbarModule, MatIconModule, MatButtonModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
@@ -19,6 +22,7 @@ export class AppComponent implements OnInit {
   title = 'Tune Detective 2';
   showBottomNav = false;
   showSidebarNav = false;
+  showSidebarDrawer = false;
   private preferenceSubscription?: Subscription;
 
 
@@ -28,22 +32,19 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.preferenceSubscription = this.navigationPreferenceService.preferenceChanges$.subscribe(
-      preference => {
-        this.updateNavigation(preference);
-      }
-    );
-
-    this.breakpointObserver
-      .observe([Breakpoints.HandsetPortrait, Breakpoints.HandsetLandscape])
-      .subscribe(result => {
-        const isMobile = result.matches;
-        const preferenceOverride = this.navigationPreferenceService.getPreference();
-
-        this.updateNavigation(preferenceOverride, isMobile);
-      });
-  }
-
+  this.breakpointObserver
+    .observe([Breakpoints.HandsetPortrait, Breakpoints.HandsetLandscape])
+    .subscribe(result => {
+      const isMobile = result.matches;
+      const initialPreference = isMobile ? 'bottom-nav' : 'sidebar-nav';
+      this.navigationPreferenceService.setPreference(initialPreference);
+      this.preferenceSubscription = this.navigationPreferenceService.preferenceChanges$.subscribe(
+        preference => {
+          this.updateNavigation(preference, isMobile);
+        }
+      );
+    });
+}
   ngOnDestroy() {
     this.preferenceSubscription?.unsubscribe();
   }
@@ -56,15 +57,15 @@ export class AppComponent implements OnInit {
   }
 
   private updateNavigation(preference: string | null, isMobile = false) {
-    if (preference === 'bottom-nav') {
-      this.showBottomNav = true;
-      this.showSidebarNav = false;
-    } else if (preference === 'sidebar-nav') {
-      this.showBottomNav = false;
-      this.showSidebarNav = true;
+    const isBottomNavPreferred = preference === 'bottom-nav';
+    const isSidebarNavPreferred = preference === 'sidebar-nav';
+
+    if (isMobile) {
+      this.showBottomNav = isBottomNavPreferred || preference === null;
+      this.showSidebarNav = isSidebarNavPreferred;
     } else {
-      this.showBottomNav = isMobile;
-      this.showSidebarNav = !isMobile;
+      this.showBottomNav = isBottomNavPreferred;
+      this.showSidebarNav = isSidebarNavPreferred || preference === null;
     }
   }
 }
