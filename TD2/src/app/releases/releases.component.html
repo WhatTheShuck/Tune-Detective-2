@@ -1,12 +1,16 @@
-<h2>Tracked Artists</h2>
-<mat-list>
-  @for (release of releases; track release.id ) {
-  <mat-list-item (click)="openTrackChooser(release.id, release.cover)">
-    <img matListItemAvatar [src]="release.cover" alt="Album Cover">
-    <div matLine>{{ release.title }}</div>
-    <div matLine>{{ release.artist }}</div>
-  </mat-list-item>
-  }
-</mat-list>
-<button mat-raised-button (click)="exportTrackedArtists()">Export</button>
-<button mat-raised-button (click)="importTrackedArtists()">Import</button>
+<div class="container">
+  <h2 class="centered-title">Tracked Artists</h2>
+  <mat-list class="artist-list">
+    @for (release of releases; track release.id ) {
+    <mat-list-item (click)="openTrackChooser(release.id, release.cover)" class="artist-item">
+      <img matListItemAvatar [src]="release.cover" alt="Album Cover">
+      <div matLine class="title-line">{{ release.title }}</div>
+      <div matLine class="artist-line">{{ release.artist.name }} | {{release.release_date}}</div>
+    </mat-list-item>
+    }
+  </mat-list>
+  <div class="button-container">
+    <button mat-raised-button (click)="exportTrackedArtists()">Export</button>
+    <button mat-raised-button (click)="importTrackedArtists()">Import</button>
+  </div>
+</div>

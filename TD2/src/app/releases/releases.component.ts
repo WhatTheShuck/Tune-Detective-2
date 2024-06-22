@@ -1,5 +1,5 @@
-import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { Component, OnInit } from '@angular/core';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,6 +18,8 @@ import { TrackChooserComponent } from '../track-chooser/track-chooser.component'
 })
 export class ReleasesComponent implements OnInit {
   releases: Album[] = [];
+  private fetchCount = 0;
+  private totalArtists = 0;
   constructor(private http: HttpClient, private dialog: MatDialog) {}
 
   ngOnInit() {
@@ -28,6 +30,9 @@ export class ReleasesComponent implements OnInit {
     const trackedArtistsJson = localStorage.getItem('trackedArtists');
     if (trackedArtistsJson) {
       const trackedArtistIds = JSON.parse(trackedArtistsJson);
+      this.totalArtists = trackedArtistIds.length;
+      this.fetchCount = 0;
+      this.releases = [];
       trackedArtistIds.forEach((artistId: number) => {
         this.fetchRecentAlbum(artistId);
       });
@@ -36,19 +41,55 @@ export class ReleasesComponent implements OnInit {
 
   fetchRecentAlbum(artistId: number) {
     const apiUrl = `https://api.deezer.com/artist/${artistId}/albums&output=jsonp`;
-
     this.http.jsonp(apiUrl, 'callback').subscribe(
       (response: any) => {
         const albums: Album[] = response.data;
         albums.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
         if (albums.length > 0) {
-          this.releases.push(albums[0]);
+          const mostRecentAlbumId = albums[0].id;
+          this.fetchAlbumDetails(mostRecentAlbumId);
+        } else {
+          this.checkAndSortReleases();
         }
       },
       (error) => {
-        console.error('API error:', error);
+        console.error('API error fetching albums:', error);
+        this.checkAndSortReleases();
       }
     );
+  }
+  fetchAlbumDetails(albumId: number) {
+    const albumDetailsUrl = `https://api.deezer.com/album/${albumId}&output=jsonp`;
+    this.http.jsonp(albumDetailsUrl, 'callback').subscribe(
+      (albumDetails: any) => {
+        const album: Album = {
+        id: albumDetails?.id,
+        title: albumDetails?.title || 'Unknown Title',
+        cover: albumDetails?.cover_medium || 'default-cover-url.jpg',
+        release_date: albumDetails?.release_date || 'Unknown Date',
+        artist: {
+          id: albumDetails?.artist?.id,
+          name: albumDetails?.artist?.name || 'Unknown Artist'
+        }
+      };        this.releases.push(album);
+        this.checkAndSortReleases();
+      },
+      (error) => {
+        console.error('API error fetching album details:', error);
+        this.checkAndSortReleases();
+      }
+    );
+  }
+
+  checkAndSortReleases() {
+    this.fetchCount++;
+    if (this.fetchCount === this.totalArtists) {
+      this.sortReleases();
+    }
+  }
+
+  sortReleases() {
+    this.releases.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
   }
 
   openTrackChooser(albumID: number, albumCover: string) {
