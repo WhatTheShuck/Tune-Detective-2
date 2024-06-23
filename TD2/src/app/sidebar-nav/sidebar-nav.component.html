@@ -21,3 +21,17 @@
     </mat-sidenav-container>
     -->
 <div> Side Works! </div>
+<nav>
+  <a [routerLink]="['/']" [class.active]="isActiveRoute('/')">
+    <mat-icon>search</mat-icon>
+    Search
+  </a>
+  <a [routerLink]="['/releases']" [class.active]="isActiveRoute('/releases')">
+    <mat-icon>album</mat-icon>
+    Releases
+  </a>
+  <a  [routerLink]="['/about']" [class.active]="isActiveRoute('/about')">
+    <mat-icon>info</mat-icon>
+    About
+  </a>
+</nav>

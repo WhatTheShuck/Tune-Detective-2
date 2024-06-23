@@ -1,5 +1,5 @@
 <div class="container">
-  <h2 class="centered-title">Tracked Artists</h2>
+  <h2>Tracked Artists</h2>
   <mat-list class="artist-list">
     @for (release of releases; track release.id ) {
     <mat-list-item (click)="openTrackChooser(release.id, release.cover)" class="artist-item">

@@ -10,11 +10,15 @@ import { BottomNavComponent } from './bottom-nav/bottom-nav.component';
 import { Subscription } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatListModule } from '@angular/material/list';
+import { NgClass } from '@angular/common';
+
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, SearchComponent, RouterModule, SidebarNavComponent, BottomNavComponent, MatToolbarModule, MatIconModule, MatButtonModule],
+  imports: [RouterOutlet, SearchComponent, RouterModule, SidebarNavComponent, BottomNavComponent, MatToolbarModule, MatIconModule, MatButtonModule, MatSidenavModule, MatListModule, NgClass],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
@@ -22,7 +26,7 @@ export class AppComponent implements OnInit {
   title = 'Tune Detective 2';
   showBottomNav = false;
   showSidebarNav = false;
-  showSidebarDrawer = false;
+  isCollapsed = true;
   private preferenceSubscription?: Subscription;
 
 

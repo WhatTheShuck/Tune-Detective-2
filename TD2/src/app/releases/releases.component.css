@@ -6,11 +6,6 @@
   box-sizing: border-box;
 }
 
-.centered-title {
-  text-align: center;
-  margin-bottom: 16px;
-}
-
 .artist-list {
   width: 100%;
   padding: 0;
