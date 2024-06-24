@@ -5,9 +5,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule, HttpClientJsonpModule } from '@angular/common/http';
-import { Artist } from '../artist.interface';
 import { Album } from '../album-chooser/album-chooser.component';
 import { TrackChooserComponent } from '../track-chooser/track-chooser.component';
+import { CacheService } from '../cache.service';
+
 
 @Component({
   selector: 'app-releases',
@@ -17,16 +18,23 @@ import { TrackChooserComponent } from '../track-chooser/track-chooser.component'
   styleUrl: './releases.component.css'
 })
 export class ReleasesComponent implements OnInit {
-  releases: Album[] = [];
+   releases: Album[] = [];
   private fetchCount = 0;
   private totalArtists = 0;
-  constructor(private http: HttpClient, private dialog: MatDialog) {}
+  isLoading = false;
+
+  constructor(
+    private http: HttpClient,
+    private dialog: MatDialog,
+    private cacheService: CacheService
+  ) {}
 
   ngOnInit() {
     this.loadTrackedArtists();
   }
 
-  loadTrackedArtists() {
+  loadTrackedArtists(forceRefresh = false) {
+    this.isLoading = true;
     const trackedArtistsJson = localStorage.getItem('trackedArtists');
     if (trackedArtistsJson) {
       const trackedArtistIds = JSON.parse(trackedArtistsJson);
@@ -34,62 +42,94 @@ export class ReleasesComponent implements OnInit {
       this.fetchCount = 0;
       this.releases = [];
       trackedArtistIds.forEach((artistId: number) => {
-        this.fetchRecentAlbum(artistId);
+        this.fetchRecentAlbum(artistId, forceRefresh);
       });
+    } else {
+      this.isLoading = false;
     }
   }
 
-  fetchRecentAlbum(artistId: number) {
-    const apiUrl = `https://api.deezer.com/artist/${artistId}/albums&output=jsonp`;
-    this.http.jsonp(apiUrl, 'callback').subscribe(
-      (response: any) => {
-        const albums: Album[] = response.data;
-        albums.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
-        if (albums.length > 0) {
-          const mostRecentAlbumId = albums[0].id;
-          this.fetchAlbumDetails(mostRecentAlbumId);
-        } else {
+  fetchRecentAlbum(artistId: number, forceRefresh = false) {
+    const cacheKey = `artist_${artistId}_albums`;
+    const cachedData = forceRefresh ? null : this.cacheService.get(cacheKey);
+
+    if (cachedData) {
+      this.processAlbums(cachedData, artistId);
+    } else {
+      const apiUrl = `https://api.deezer.com/artist/${artistId}/albums&output=jsonp`;
+      this.http.jsonp(apiUrl, 'callback').subscribe(
+        (response: any) => {
+          this.cacheService.set(cacheKey, response.data);
+          this.processAlbums(response.data, artistId);
+        },
+        (error) => {
+          console.error('API error fetching albums:', error);
           this.checkAndSortReleases();
         }
-      },
-      (error) => {
-        console.error('API error fetching albums:', error);
-        this.checkAndSortReleases();
-      }
-    );
+      );
+    }
   }
-  fetchAlbumDetails(albumId: number) {
-    const albumDetailsUrl = `https://api.deezer.com/album/${albumId}&output=jsonp`;
-    this.http.jsonp(albumDetailsUrl, 'callback').subscribe(
-      (albumDetails: any) => {
-        const album: Album = {
-        id: albumDetails?.id,
-        title: albumDetails?.title || 'Unknown Title',
-        cover: albumDetails?.cover_medium || 'default-cover-url.jpg',
-        release_date: albumDetails?.release_date || 'Unknown Date',
-        artist: {
-          id: albumDetails?.artist?.id,
-          name: albumDetails?.artist?.name || 'Unknown Artist'
+
+  processAlbums(albums: Album[], artistId: number) {
+    albums.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+    if (albums.length > 0) {
+      const mostRecentAlbumId = albums[0].id;
+      this.fetchAlbumDetails(mostRecentAlbumId, artistId);
+    } else {
+      this.checkAndSortReleases();
+    }
+  }
+
+  fetchAlbumDetails(albumId: number, artistId: number, forceRefresh = false) {
+    const cacheKey = `album_${albumId}_details`;
+    const cachedData = forceRefresh ? null : this.cacheService.get(cacheKey);
+
+    if (cachedData) {
+      this.processAlbumDetails(cachedData);
+    } else {
+      const albumDetailsUrl = `https://api.deezer.com/album/${albumId}&output=jsonp`;
+      this.http.jsonp(albumDetailsUrl, 'callback').subscribe(
+        (albumDetails: any) => {
+          this.cacheService.set(cacheKey, albumDetails);
+          this.processAlbumDetails(albumDetails);
+        },
+        (error) => {
+          console.error('API error fetching album details:', error);
+          this.checkAndSortReleases();
         }
-      };        this.releases.push(album);
-        this.checkAndSortReleases();
-      },
-      (error) => {
-        console.error('API error fetching album details:', error);
-        this.checkAndSortReleases();
+      );
+    }
+  }
+
+  processAlbumDetails(albumDetails: any) {
+    const album: Album = {
+      id: albumDetails?.id,
+      title: albumDetails?.title || 'Unknown Title',
+      cover: albumDetails?.cover_medium || 'default-cover-url.jpg',
+      release_date: albumDetails?.release_date || 'Unknown Date',
+      artist: {
+        id: albumDetails?.artist?.id,
+        name: albumDetails?.artist?.name || 'Unknown Artist'
       }
-    );
+    };
+    this.releases.push(album);
+    this.checkAndSortReleases();
   }
 
   checkAndSortReleases() {
     this.fetchCount++;
     if (this.fetchCount === this.totalArtists) {
       this.sortReleases();
+      this.isLoading = false;
     }
   }
 
   sortReleases() {
     this.releases.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+  }
+
+  refreshReleases() {
+    this.loadTrackedArtists(true);
   }
 
   openTrackChooser(albumID: number, albumCover: string) {

@@ -11,6 +11,10 @@
   </mat-list>
   <div class="button-container">
     <button mat-raised-button (click)="exportTrackedArtists()">Export</button>
+    <button mat-raised-button color="primary" (click)="refreshReleases()" [disabled]="isLoading">
+      <mat-icon>refresh</mat-icon>
+      Refresh Releases
+    </button>
     <button mat-raised-button (click)="importTrackedArtists()">Import</button>
   </div>
 </div>
