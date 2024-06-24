@@ -1,13 +1,19 @@
 import Dexie, { Table } from 'dexie';
 
 export interface TrackedArtist {
-  id?: number;
-  artistID: number;
-  artistName: string;
+  id: number;
+  name: string;
 }
 
-export class AppDB extends Dexie {
+export class AppDatabase extends Dexie {
   trackedArtists!: Table<TrackedArtist, number>;
 
+  constructor() {
+    super('TuneDetective');
+    this.version(1).stores({
+      trackedArtists: '&id, name'
+    });
+  }
 }
-export const db = new AppDB();
+
+export const db = new AppDatabase();

@@ -8,6 +8,7 @@ import { HttpClient, HttpClientModule, HttpClientJsonpModule } from '@angular/co
 import { Album } from '../album-chooser/album-chooser.component';
 import { TrackChooserComponent } from '../track-chooser/track-chooser.component';
 import { CacheService } from '../cache.service';
+import { db } from '../db';
 
 
 @Component({
@@ -33,20 +34,15 @@ export class ReleasesComponent implements OnInit {
     this.loadTrackedArtists();
   }
 
-  loadTrackedArtists(forceRefresh = false) {
+  async loadTrackedArtists(forceRefresh = false) {
     this.isLoading = true;
-    const trackedArtistsJson = localStorage.getItem('trackedArtists');
-    if (trackedArtistsJson) {
-      const trackedArtistIds = JSON.parse(trackedArtistsJson);
-      this.totalArtists = trackedArtistIds.length;
-      this.fetchCount = 0;
-      this.releases = [];
-      trackedArtistIds.forEach((artistId: number) => {
-        this.fetchRecentAlbum(artistId, forceRefresh);
-      });
-    } else {
-      this.isLoading = false;
-    }
+    const trackedArtists = await db.trackedArtists.toArray();
+    this.totalArtists = trackedArtists.length;
+    this.fetchCount = 0;
+    this.releases = [];
+    trackedArtists.forEach(artist => {
+      this.fetchRecentAlbum(artist.id, forceRefresh);
+    });
   }
 
   fetchRecentAlbum(artistId: number, forceRefresh = false) {
@@ -147,34 +143,32 @@ export class ReleasesComponent implements OnInit {
     );
   }
 
-  exportTrackedArtists() {
-    const trackedArtistsJson = localStorage.getItem('trackedArtists');
-    if (trackedArtistsJson) {
-      const trackedArtists = JSON.parse(trackedArtistsJson);
-      const blob = new Blob([JSON.stringify(trackedArtists)], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'tracked-artists.json';
-      link.click();
-    }
+  async exportTrackedArtists() {
+    const trackedArtists = await db.trackedArtists.toArray();
+    const blob = new Blob([JSON.stringify(trackedArtists)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'tracked-artists.json';
+    link.click();
   }
 
   importTrackedArtists() {
-    // Trigger file input dialog
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.json';
-    fileInput.onchange = (event: Event) => {
+    fileInput.onchange = async (event: Event) => {
       const target = event.target as HTMLInputElement;
       if (target.files && target.files.length > 0) {
         const file = target.files[0];
         const reader = new FileReader();
-        reader.onload = () => {
+        reader.onload = async () => {
           const trackedArtistsJson = reader.result as string;
           const trackedArtists = JSON.parse(trackedArtistsJson);
-          // Save the imported tracked artists to local storage
-          localStorage.setItem('trackedArtists', JSON.stringify(trackedArtists));
+          // Clear existing tracked artists
+          await db.trackedArtists.clear();
+          // Add imported tracked artists to the database
+          await db.trackedArtists.bulkAdd(trackedArtists);
           this.loadTrackedArtists();
         };
         reader.readAsText(file);

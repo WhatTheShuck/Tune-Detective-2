@@ -26,7 +26,7 @@ export class AppComponent implements OnInit {
   title = 'Tune Detective 2';
   showBottomNav = false;
   showSidebarNav = false;
-  isCollapsed = true;
+  isCollapsed = false;
   private preferenceSubscription?: Subscription;
 
 

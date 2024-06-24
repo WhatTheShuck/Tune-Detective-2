@@ -1,10 +1,11 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatListModule } from '@angular/material/list';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { Artist } from '../artist.interface';
+import { db, TrackedArtist } from '../db';
 
 @Component({
   selector: 'app-artist-chooser',
@@ -13,13 +14,23 @@ import { Artist } from '../artist.interface';
   templateUrl: './artist-chooser.component.html',
   styleUrl: './artist-chooser.component.css'
 })
-export class ArtistChooserComponent {
+export class ArtistChooserComponent implements OnInit {
   selectedArtist!: Artist;
+  trackedArtistIds: Set<number> = new Set();
 
   constructor(
     public dialogRef: MatDialogRef<ArtistChooserComponent>,
     @Inject(MAT_DIALOG_DATA) public artists: Artist[]
-  ) { }
+  ) {}
+
+  async ngOnInit() {
+    await this.loadTrackedArtists();
+  }
+
+  async loadTrackedArtists() {
+    const trackedArtists = await db.trackedArtists.toArray();
+    this.trackedArtistIds = new Set(trackedArtists.map(artist => artist.id));
+  }
 
   onSelect(artist: Artist) {
     this.dialogRef.close(artist.id);
@@ -28,28 +39,27 @@ export class ArtistChooserComponent {
   onCancel() {
     this.dialogRef.close();
   }
-    toggleTrackArtist(artist: Artist, event: Event) {
+
+  async toggleTrackArtist(artist: Artist, event: Event) {
     event.stopPropagation();
-    const trackedArtists = this.getTrackedArtists();
-    const index = trackedArtists.indexOf(artist.id);
-    if (index > -1) {
-      trackedArtists.splice(index, 1);
-    } else {
-      trackedArtists.push(artist.id);
+    if (artist.id === undefined) {
+      console.error('Artist ID is undefined');
+      return;
     }
-    this.saveTrackedArtists(trackedArtists);
+    if (this.trackedArtistIds.has(artist.id)) {
+      await db.trackedArtists.delete(artist.id);
+      this.trackedArtistIds.delete(artist.id);
+    } else {
+      const trackedArtist: TrackedArtist = {
+        id: artist.id,
+        name: artist.name
+      };
+      await db.trackedArtists.add(trackedArtist);
+      this.trackedArtistIds.add(artist.id);
+    }
   }
 
   isArtistTracked(artist: Artist): boolean {
-    const trackedArtists = this.getTrackedArtists();
-    return trackedArtists.includes(artist.id);
+    return artist.id !== undefined && this.trackedArtistIds.has(artist.id);
   }
-
-  private getTrackedArtists(): number[] {
-    const trackedArtistsJson = localStorage.getItem('trackedArtists');
-    return trackedArtistsJson ? JSON.parse(trackedArtistsJson) : [];
-  }
-
-  private saveTrackedArtists(trackedArtists: number[]) {
-    localStorage.setItem('trackedArtists', JSON.stringify(trackedArtists));
-  }}
+}
