@@ -18,14 +18,25 @@
   @if (showSidebarNav) {
   <mat-sidenav [ngClass]="isCollapsed ? 'expanded' : ''" mode='side' opened='true'>
     <mat-nav-list>
-      <a mat-list-item>
-        <span class="entry">
-          <mat-icon>house</mat-icon>
           @if (!isCollapsed) {
-            <app-sidebar-nav />
+          <nav>
+<a mat-list-item
+  [routerLink]="['/']" [class.active]="isActiveRoute('/')">
+    <mat-icon>search</mat-icon>
+    Search
+</a>
+<a mat-list-item
+   [routerLink]="['/releases']" [class.active]="isActiveRoute('/releases')">
+    <mat-icon>album</mat-icon>
+    Releases
+</a>
+<a mat-list-item
+    [routerLink]="['/about']" [class.active]="isActiveRoute('/about')">
+    <mat-icon>info</mat-icon>
+    About
+  </a>
+</nav>
           }
-        </span>
-      </a>
     </mat-nav-list>
   </mat-sidenav>
   }
