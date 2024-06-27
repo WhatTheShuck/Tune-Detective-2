@@ -1,6 +1,6 @@
 <mat-toolbar color="primary">
   @if (showSidebarNav) {
-  <button mat-icon-button aria-label="Menu icon" (click)="isCollapsed = !isCollapsed" >
+  <button mat-icon-button aria-label="Menu icon" (click)="toggleSidenav()" >
     <mat-icon>menu</mat-icon>
   </button>
 }
@@ -16,31 +16,29 @@
 </mat-toolbar>
 <mat-sidenav-container autosize>
   @if (showSidebarNav) {
-  <mat-sidenav [ngClass]="isCollapsed ? 'expanded' : ''" mode='side' opened='true'>
+  <mat-sidenav  mode='side' opened [ngClass]="{'expanded': !isExpanded}">
     <mat-nav-list>
-          @if (!isCollapsed) {
-          <nav>
-<a mat-list-item
-  [routerLink]="['/']" [class.active]="isActiveRoute('/')">
-    <mat-icon>search</mat-icon>
-    Search
-</a>
-<a mat-list-item
-   [routerLink]="['/releases']" [class.active]="isActiveRoute('/releases')">
-    <mat-icon>album</mat-icon>
-    Releases
-</a>
-<a mat-list-item
-    [routerLink]="['/about']" [class.active]="isActiveRoute('/about')">
-    <mat-icon>info</mat-icon>
-    About
-  </a>
-</nav>
-          }
+      <nav>
+        <a mat-list-item
+            [routerLink]="['/']" [class.active]="isActiveRoute('/')">
+            <mat-icon>search</mat-icon>
+            <span class="nav-text"> Search</span>
+        </a>
+        <a mat-list-item
+            [routerLink]="['/releases']" [class.active]="isActiveRoute('/releases')">
+            <mat-icon>album</mat-icon>
+            <span class="nav-text"> Releases</span>
+        </a>
+        <a mat-list-item
+            [routerLink]="['/about']" [class.active]="isActiveRoute('/about')">
+            <mat-icon>info</mat-icon>
+            <span class="nav-text"> About</span>
+         </a>
+      </nav>
     </mat-nav-list>
   </mat-sidenav>
   }
-  <mat-sidenav-content>
+  <mat-sidenav-content [ngClass]="{'content-shifted': showSidebarNav && isExpanded}">
     <div class="app-container">
     <router-outlet />
 </div>
