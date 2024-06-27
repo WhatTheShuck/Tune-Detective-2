@@ -54,4 +54,6 @@ ng serve
 
 - Be sad because you can't install it as a PWA
 
-# Eventually I'll host it somewhere, then you'll be able to visit the URL and just click install :) 
+# Try it out
+
+https://tunedetective2.shuckle.uk
