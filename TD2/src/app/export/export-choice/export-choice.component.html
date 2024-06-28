@@ -17,5 +17,5 @@
   <p>Format: {{exportFormat}} Content: {{exportContent}}</p>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-  <button mat-button [mat-dialog-close]="true" [disabled]="!exportContent || !exportFormat" >Export Now</button>
+  <button mat-button (click)="onExport()" [disabled]="!exportContent || !exportFormat">Export Now</button>
 </mat-dialog-actions>

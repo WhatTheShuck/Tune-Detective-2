@@ -18,8 +18,31 @@ export class ExportComponent {
     const dialogRef = this.dialog.open(ExportChoiceComponent);
 
     dialogRef.afterClosed().subscribe(result => {
-      console.log('worky');
+      if (result) {
+        this.handleExport(result.content, result.format);
+      }
     });
+  }
+
+
+  private handleExport(content: string, format: string) {
+    switch (format) {
+      case 'file':
+        if (content === 'artists') {
+          this.exportTrackedArtistsToFile();
+        } else {
+          // Handle other content types for file export
+        }
+        break;
+      case 'qrcode':
+        // Handle QR code export
+        break;
+      case 'string':
+        // Handle string export
+        break;
+      default:
+        console.error('Unsupported export format');
+    }
   }
 
   async exportTrackedArtistsToFile() {

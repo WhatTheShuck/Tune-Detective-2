@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import {MatDialog, MatDialogModule} from '@angular/material/dialog';
+import {MatDialogRef, MatDialogModule} from '@angular/material/dialog';
 import { FormsModule} from '@angular/forms';
 import {MatButtonToggleModule} from '@angular/material/button-toggle';
 
@@ -14,4 +14,12 @@ import {MatButtonToggleModule} from '@angular/material/button-toggle';
 export class ExportChoiceComponent {
   exportContent?: string;
   exportFormat?: string;
+
+  constructor(public dialogRef: MatDialogRef<ExportChoiceComponent>) {}
+
+  onExport() {
+    if (this.exportContent && this.exportFormat) {
+      this.dialogRef.close({content: this.exportContent, format: this.exportFormat });
+    }
+  }
 }
