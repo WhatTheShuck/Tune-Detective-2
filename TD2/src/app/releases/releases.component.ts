@@ -8,18 +8,20 @@ import { HttpClient, HttpClientModule, HttpClientJsonpModule } from '@angular/co
 import { Album } from '../album-chooser/album-chooser.component';
 import { TrackChooserComponent } from '../track-chooser/track-chooser.component';
 import { CacheService } from '../cache.service';
+import { ImportComponent } from '../import/import.component';
+import { ExportComponent } from '../export/export.component';
 import { db } from '../db';
 
 
 @Component({
   selector: 'app-releases',
   standalone: true,
-  imports: [CommonModule, MatListModule, MatButtonModule, MatIconModule, MatDialogModule, HttpClientModule, HttpClientJsonpModule, TrackChooserComponent],
+  imports: [CommonModule, MatListModule, MatButtonModule, MatIconModule, MatDialogModule, HttpClientModule, HttpClientJsonpModule, TrackChooserComponent, ImportComponent, ExportComponent],
   templateUrl: './releases.component.html',
   styleUrl: './releases.component.css'
 })
 export class ReleasesComponent implements OnInit {
-   releases: Album[] = [];
+  releases: Album[] = [];
   private fetchCount = 0;
   private totalArtists = 0;
   isLoading = false;
@@ -143,37 +145,4 @@ export class ReleasesComponent implements OnInit {
     );
   }
 
-  async exportTrackedArtists() {
-    const trackedArtists = await db.trackedArtists.toArray();
-    const blob = new Blob([JSON.stringify(trackedArtists)], { type: 'application/json' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'tracked-artists.json';
-    link.click();
-  }
-
-  importTrackedArtists() {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.json';
-    fileInput.onchange = async (event: Event) => {
-      const target = event.target as HTMLInputElement;
-      if (target.files && target.files.length > 0) {
-        const file = target.files[0];
-        const reader = new FileReader();
-        reader.onload = async () => {
-          const trackedArtistsJson = reader.result as string;
-          const trackedArtists = JSON.parse(trackedArtistsJson);
-          // Clear existing tracked artists
-          await db.trackedArtists.clear();
-          // Add imported tracked artists to the database
-          await db.trackedArtists.bulkAdd(trackedArtists);
-          this.loadTrackedArtists();
-        };
-        reader.readAsText(file);
-      }
-    };
-    fileInput.click();
-  }
 }
