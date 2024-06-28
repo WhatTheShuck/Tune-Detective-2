@@ -1,8 +1,21 @@
 <mat-dialog-content class="mat-typography">
-  <h3>What do you want to export?</h3>
+  <h3>Export</h3>
+  <p>Export Content</p>
+<mat-button-toggle-group [(ngModel)]='exportContent' aria-label="Content of Export">
+    <mat-button-toggle value="artists">Artists</mat-button-toggle>
+    <mat-button-toggle value="settings">Settings</mat-button-toggle>
+    <mat-button-toggle value="all">All</mat-button-toggle>
+  </mat-button-toggle-group>
+  <br>
+  <br>
+  <p>Export Format</p>
+<mat-button-toggle-group [(ngModel)]='exportFormat' aria-label="Format of Export">
+    <mat-button-toggle value="qrcode">QR Code</mat-button-toggle>
+    <mat-button-toggle value="file">File</mat-button-toggle>
+    <mat-button-toggle value="string">String</mat-button-toggle>
+  </mat-button-toggle-group>
+  <p>Format: {{exportFormat}} Content: {{exportContent}}</p>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close>Settings</button>
-  <button mat-button mat-dialog-close>All</button>
-  <button mat-button [mat-dialog-close]="true" cdkFocusInitial>Tracked Artists</button>
+  <button mat-button [mat-dialog-close]="true" [disabled]="!exportContent || !exportFormat" >Export Now</button>
 </mat-dialog-actions>
