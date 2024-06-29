@@ -28,11 +28,8 @@ export class ExportComponent {
   private handleExport(content: string, format: string) {
     switch (format) {
       case 'file':
-        if (content === 'artists') {
-          this.exportTrackedArtistsToFile();
-        } else {
+          this.exportToFile(content);
           // Handle other content types for file export
-        }
         break;
       case 'qrcode':
         // Handle QR code export
@@ -45,14 +42,34 @@ export class ExportComponent {
     }
   }
 
-  async exportTrackedArtistsToFile() {
-    const trackedArtists = await db.trackedArtists.toArray();
-    const blob = new Blob([JSON.stringify(trackedArtists)], { type: 'application/json' });
+
+  async exportToFile(content: string) {
+    let data: any;
+    switch (content) {
+      case 'artists':
+        data = { trackedArtists: await db.trackedArtists.toArray() };
+        break;
+      case 'settings':
+        data = { settings: await db.settings.toArray() };
+        break;
+      case 'all':
+        data = {
+          trackedArtists: await db.trackedArtists.toArray(),
+          settings: await db.settings.toArray()
+        };
+        break;
+      default:
+        console.error('Unsupported export content');
+        return;
+    }
+
+    const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'tracked-artists.json';
+    link.download = `export_${content}.json`;
     link.click();
+    window.URL.revokeObjectURL(url);
   }
 }
 
