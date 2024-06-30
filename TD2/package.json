@@ -21,6 +21,8 @@
     "@angular/platform-browser-dynamic": "^18.0.1",
     "@angular/router": "^18.0.1",
     "@angular/service-worker": "^18.0.1",
+    "angularx-qrcode": "^17.0.1",
+    "compress-json": "^3.1.0",
     "dexie": "^4.0.7",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
@@ -38,5 +40,10 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "typescript": "~5.4.2"
+  },
+  "overrides": {
+    "angularx-qrcode": {
+      "@angular/core": "$@angular/core"
+    }
   }
 }
