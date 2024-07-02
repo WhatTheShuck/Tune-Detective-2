@@ -3,7 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import {MatDialog, MatDialogModule} from '@angular/material/dialog';
 import { ExportChoiceComponent } from './export-choice/export-choice.component';
 import { db } from '../db';
-import * as QRCode from 'angularx-qrcode';
+import { QRCodeModule } from 'angularx-qrcode';
 import { compress } from 'compress-json';
 
 const QR_CODE_SIZE_LIMIT = 1000; // in bytes & pretty arbitrary. Could be adjusted, depending on qrcode version, etc
@@ -11,12 +11,13 @@ const QR_CODE_SIZE_LIMIT = 1000; // in bytes & pretty arbitrary. Could be adjust
 @Component({
   selector: 'app-export',
   standalone: true,
-  imports: [MatButtonModule, MatDialogModule, ExportChoiceComponent],
+  imports: [MatButtonModule, MatDialogModule, ExportChoiceComponent, QRCodeModule],
   templateUrl: './export.component.html',
   styleUrl: './export.component.css'
 })
 export class ExportComponent {
   readonly dialog = inject(MatDialog);
+  qrCodeData: string | null = null;
 
   openDialog() {
     const dialogRef = this.dialog.open(ExportChoiceComponent);
@@ -29,7 +30,7 @@ export class ExportComponent {
   }
 
 
-  private handleExport(content: string, format: string) {
+  private async handleExport(content: string, format: string) {
     const data = await this.getData(content);
     if (!data) return;
     const compressedData = compress(data);
@@ -90,11 +91,13 @@ export class ExportComponent {
   }
 
   private async exportToQRCode(data: any) {
+    this.qrCodeData = data;
 
   }
 
   private exportToString(data: any) {
-
+    const base64String = btoa(data);
+    console.log('Export string', base64String);
   }
 }
 

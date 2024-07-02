@@ -1,1 +1,8 @@
 <button mat-raised-button (click)="openDialog()">Export</button>
+@if (qrCodeData) {
+<div >
+    <h2>Scan this QR Code to export your data:</h2>
+    <qrcode [qrdata]="qrCodeData" [width]="256" [errorCorrectionLevel]="'M'"></qrcode>
+</div>
+
+}
