@@ -1,0 +1,23 @@
+<mat-dialog-content class="mat-typography">
+  <h3>Export</h3>
+  @switch (data.type) {
+    @case ("qrcode") {
+      <p>Scan this QR Code to export your data:</p>
+      <qrcode [qrdata]="data.data!" [width]="256" [errorCorrectionLevel]="'M'"></qrcode>
+    }
+    @case ("string") {
+      <p>Copy the following string to export your data:</p>
+      <textarea readonly>{{ data.data }}</textarea>
+      <button mat-button [cdkCopyToClipboard]="data.data!">Copy to Clipboard</button>
+    }
+    @case ("file") {
+      <p>Your file has been downloaded.</p>
+      <p>Filename: {{ data.filename }}</p>
+      <button mat-button (click)="retryDownload()">Retry Download</button>
+    }
+
+  }
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="close()">Close</button>
+</mat-dialog-actions>

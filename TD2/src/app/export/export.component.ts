@@ -2,8 +2,8 @@ import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import {MatDialog, MatDialogModule} from '@angular/material/dialog';
 import { ExportChoiceComponent } from './export-choice/export-choice.component';
+import { ExportDialogComponent, ExportResultData } from './export-dialog/export-dialog.component';
 import { db } from '../db';
-import { QRCodeModule } from 'angularx-qrcode';
 import { compress } from 'compress-json';
 
 const QR_CODE_SIZE_LIMIT = 1000; // in bytes & pretty arbitrary. Could be adjusted, depending on qrcode version, etc
@@ -11,7 +11,7 @@ const QR_CODE_SIZE_LIMIT = 1000; // in bytes & pretty arbitrary. Could be adjust
 @Component({
   selector: 'app-export',
   standalone: true,
-  imports: [MatButtonModule, MatDialogModule, ExportChoiceComponent, QRCodeModule],
+  imports: [MatButtonModule, MatDialogModule, ExportChoiceComponent, ExportDialogComponent],
   templateUrl: './export.component.html',
   styleUrl: './export.component.css'
 })
@@ -31,27 +31,36 @@ export class ExportComponent {
 
 
   private async handleExport(content: string, format: string) {
-    const data = await this.getData(content);
-    if (!data) return;
-    const compressedData = compress(data);
+    try {
+      const data = await this.getData(content);
+      if (!data) return;
+      const compressedData = compress(data);
+      let exportResultData: ExportResultData;
 
-    switch (format) {
-      case 'file':
+      switch (format) {
+        case 'file':
           this.exportToFile(content, compressedData);
-          // Handle other content types for file export
-        break;
-      case 'qrcode':
-        if (this.isQRCodeSizeExceeded(compressedData)) {
-          this.showQRCodeSizeExceededWarning();
-        } else {
-          this.exportToQRCode(compressedData);
-        }
-        break;
-      case 'string':
-        this.exportToString(compressedData);
-        break;
-      default:
-        console.error('Unsupported export format');
+          exportResultData = { type: 'file', filename: "filename" };
+          break;
+        case 'qrcode':
+          if (this.isQRCodeSizeExceeded(compressedData)) {
+            this.showQRCodeSizeExceededWarning();
+            return;
+          }
+          exportResultData = { type: 'qrcode', data: "compressedData" };
+          break;
+        case 'string':
+          const exportString = this.exportToString(compressedData);
+          exportResultData = { type: 'string', data: "exportString"};
+          break;
+        default:
+          console.error('Unsupported export format');
+          return;
+      }
+
+      this.openResultDialog(exportResultData);
+    } catch (error) {
+      console.error('Error during export:', error);
     }
   }
 
@@ -80,14 +89,16 @@ export class ExportComponent {
     }
   }
 
-  private async exportToFile(content: string, data: any) {
+  private async exportToFile(content: string, data: any): Promise<String> {
+    const filename = `export_${content}.json`;
     const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `export_${content}.json`;
+    link.download = filename;
     link.click();
     window.URL.revokeObjectURL(url);
+    return filename;
   }
 
   private async exportToQRCode(data: any) {
@@ -98,6 +109,13 @@ export class ExportComponent {
   private exportToString(data: any) {
     const base64String = btoa(data);
     console.log('Export string', base64String);
+  }
+
+  private openResultDialog(data: ExportResultData) {
+    this.dialog.open(ExportDialogComponent, {
+      width: '400px',
+      data: data
+    });
   }
 }
 
