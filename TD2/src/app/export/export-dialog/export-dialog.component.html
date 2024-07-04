@@ -7,7 +7,9 @@
     }
     @case ("string") {
       <p>Copy the following string to export your data:</p>
-      <textarea readonly>{{ data.data }}</textarea>
+      <mat-form-field>
+      <textarea matInput readonly>{{ data.data }}</textarea>
+      </mat-form-field>
       <button mat-button [cdkCopyToClipboard]="data.data!">Copy to Clipboard</button>
     }
     @case ("file") {
@@ -17,6 +19,7 @@
     }
 
   }
+
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button (click)="close()">Close</button>

@@ -17,7 +17,6 @@ const QR_CODE_SIZE_LIMIT = 1000; // in bytes & pretty arbitrary. Could be adjust
 })
 export class ExportComponent {
   readonly dialog = inject(MatDialog);
-  qrCodeData: string | null = null;
 
   openDialog() {
     const dialogRef = this.dialog.open(ExportChoiceComponent);
@@ -39,19 +38,19 @@ export class ExportComponent {
 
       switch (format) {
         case 'file':
-          this.exportToFile(content, compressedData);
-          exportResultData = { type: 'file', filename: "filename" };
+          const filename = this.exportToFile(content, compressedData);
+          exportResultData = { type: 'file', filename };
           break;
         case 'qrcode':
           if (this.isQRCodeSizeExceeded(compressedData)) {
             this.showQRCodeSizeExceededWarning();
             return;
           }
-          exportResultData = { type: 'qrcode', data: "compressedData" };
+          exportResultData = { type: 'qrcode', data: compressedData.toString() };
           break;
         case 'string':
           const exportString = this.exportToString(compressedData);
-          exportResultData = { type: 'string', data: "exportString"};
+          exportResultData = { type: 'string', data: exportString};
           break;
         default:
           console.error('Unsupported export format');
@@ -89,7 +88,7 @@ export class ExportComponent {
     }
   }
 
-  private async exportToFile(content: string, data: any): Promise<String> {
+  private exportToFile(content: string, data: any): string {
     const filename = `export_${content}.json`;
     const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
     const url = window.URL.createObjectURL(blob);
@@ -101,14 +100,10 @@ export class ExportComponent {
     return filename;
   }
 
-  private async exportToQRCode(data: any) {
-    this.qrCodeData = data;
 
-  }
-
-  private exportToString(data: any) {
+  private exportToString(data: any): string {
     const base64String = btoa(data);
-    console.log('Export string', base64String);
+    return base64String;
   }
 
   private openResultDialog(data: ExportResultData) {

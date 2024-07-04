@@ -14,7 +14,10 @@
     <mat-button-toggle value="file">File</mat-button-toggle>
     <mat-button-toggle value="string">String</mat-button-toggle>
   </mat-button-toggle-group>
-  <p>Format: {{exportFormat}} Content: {{exportContent}}</p>
+  @if (exportContent === "artists" || exportContent === "all") {
+  <p>Please be aware that exporting your Artists or All</p>
+  <p >to QR Code and String can get a bit out of hand if you track many artists</p>
+  }
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button (click)="onExport()" [disabled]="!exportContent || !exportFormat">Export Now</button>
