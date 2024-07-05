@@ -20,9 +20,63 @@ export class ImportComponent {
       //width: '300px',
       data: { mode: 'import' }
     });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.handleImport(result.content, result.format);
+      }
+    });
   }
 
-  importTrackedArtists() {
+  private async handleImport(content: string, format: string) {
+    try {
+      //const data = await this.getData(content);
+      //if (!data) return;
+      //const decompressedData = decompress(data);
+      //let importResultData: ImportResultData;
+
+      switch (format) {
+        case 'file':
+          //const filename = this.exportToFile(content, compressedData);
+          //exportResultData = { type: 'file', filename };
+          break;
+        case 'qrcode':
+          // open camera
+          //exportResultData = { type: 'qrcode', data: compressedData.toString() };
+          break;
+        case 'string':
+          //const exportString = this.exportToString(compressedData);
+          //exportResultData = { type: 'string', data: exportString};
+          break;
+        default:
+          console.error('Unsupported import format');
+          return;
+      }
+
+      //this.openResultDialog(exportResultData);
+    } catch (error) {
+      console.error('Error during export:', error);
+    }
+  }
+
+  private async loadData(content: string, data: any): Promise<any> {
+    switch (content) {
+      case 'artists':
+        return { trackedArtists: await db.trackedArtists.toArray() };
+      case 'settings':
+        return { settings: await db.settings.toArray() };
+      case 'all':
+        return {
+          trackedArtists: await db.trackedArtists.toArray(),
+          settings: await db.settings.toArray()
+        };
+      default:
+        console.error('Unsupported export content');
+        return null;
+    }
+  }
+
+  importFromFile(content: string, data: any) {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.json';
@@ -44,4 +98,12 @@ export class ImportComponent {
     fileInput.click();
   }
 
+  private importFromString(base64String: string): any {
+    const uncompressedData = atob(base64String);
+    return uncompressedData;
+  }
+
+  private importFromQRCode() {
+
+  }
 }
