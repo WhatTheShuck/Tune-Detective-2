@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import {MatDialog, MatDialogModule} from '@angular/material/dialog';
-import { ExportChoiceComponent } from './export-choice/export-choice.component';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ExportChoiceComponent } from '../export-choice/export-choice.component';
 import { ExportDialogComponent, ExportResultData } from './export-dialog/export-dialog.component';
 import { db } from '../db';
 import { compress } from 'compress-json';
@@ -19,7 +19,9 @@ export class ExportComponent {
   readonly dialog = inject(MatDialog);
 
   openDialog() {
-    const dialogRef = this.dialog.open(ExportChoiceComponent);
+    const dialogRef = this.dialog.open(ExportChoiceComponent, {
+      data: { mode: 'export'}
+    });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {

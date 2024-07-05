@@ -1,0 +1,29 @@
+<mat-dialog-content class="mat-typography">
+  <h3>{{ title }}</h3>
+  <p>{{ title }} Content</p>
+  <mat-button-toggle-group [(ngModel)]='transferContent' aria-label="Content of ">
+    <mat-button-toggle value="artists">Artists</mat-button-toggle>
+    <mat-button-toggle value="settings">Settings</mat-button-toggle>
+    <mat-button-toggle value="all">All</mat-button-toggle>
+  </mat-button-toggle-group>
+  <br>
+  <br>
+  <p>{{ title }} Format</p>
+<mat-button-toggle-group [(ngModel)]='transferFormat' aria-label="Format of Export">
+    <mat-button-toggle value="qrcode">QR Code</mat-button-toggle>
+    <mat-button-toggle value="file">File</mat-button-toggle>
+    <mat-button-toggle value="string">String</mat-button-toggle>
+  </mat-button-toggle-group>
+  <br>
+  <br>
+  @if ((transferContent === "artists" || transferContent === "all") && mode === 'export') {
+  <p class="export-disclaimer">Please be aware that exporting your Artists or All
+  to QR Code and String can get a bit out of hand if you track many artists</p>
+  }
+  @if (mode === 'import') {
+  <p class="export-disclaimer"> Please ensure that the data you're importing is in the correct format</p>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onAction()" [disabled]="!transferContent || !transferFormat">{{ actionButtonText }}</button>
+</mat-dialog-actions>
