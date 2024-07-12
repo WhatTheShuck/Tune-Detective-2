@@ -104,7 +104,8 @@ export class ExportComponent {
 
 
   private exportToString(data: any): string {
-    const base64String = btoa(data);
+    const stringified = JSON.stringify(data);
+    const base64String = btoa(stringified);
     return base64String;
   }
 

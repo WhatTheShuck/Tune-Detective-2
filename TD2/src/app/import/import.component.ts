@@ -30,77 +30,83 @@ export class ImportComponent {
 
   private async handleImport(content: string, format: string) {
     try {
-      //const data = await this.getData(content);
-      //if (!data) return;
-      //const decompressedData = decompress(data);
-      //let importResultData: ImportResultData;
+      let importedData: any;
 
       switch (format) {
         case 'file':
-          //const filename = this.exportToFile(content, compressedData);
-          //exportResultData = { type: 'file', filename };
+          importedData = await this.importFromFile();
           break;
         case 'qrcode':
-          // open camera
-          //exportResultData = { type: 'qrcode', data: compressedData.toString() };
+          // open camera for mobile, file picker for desktop
           break;
         case 'string':
-          //const exportString = this.exportToString(compressedData);
-          //exportResultData = { type: 'string', data: exportString};
+          importedData = await this.importFromString();
           break;
         default:
           console.error('Unsupported import format');
           return;
       }
 
+      if (importedData) {
+        await this.loadData(content, importedData);
+        console.log("success");
+      }
+
       //this.openResultDialog(exportResultData);
     } catch (error) {
-      console.error('Error during export:', error);
+      console.error('Error during import:', error);
     }
   }
 
-  private async loadData(content: string, data: any): Promise<any> {
+  private async loadData(content: string, data: string): Promise<void> {
+    const decompressedData = decompress(JSON.parse(data));
     switch (content) {
       case 'artists':
-        return { trackedArtists: await db.trackedArtists.toArray() };
+        await db.trackedArtists.clear();
+        await db.trackedArtists.bulkAdd(decompressedData.trackedArtists);
+        break;
       case 'settings':
-        return { settings: await db.settings.toArray() };
+        await db.settings.clear();
+        await db.settings.bulkAdd(decompressedData.settings);
+        break;
       case 'all':
-        return {
-          trackedArtists: await db.trackedArtists.toArray(),
-          settings: await db.settings.toArray()
-        };
+        await db.trackedArtists.clear();
+        await db.settings.clear();
+        await db.trackedArtists.bulkAdd(decompressedData.trackedArtists);
+        await db.settings.bulkAdd(decompressedData.settings);
+        break;
       default:
-        console.error('Unsupported export content');
-        return null;
+        console.error('Unsupported import content');
     }
   }
 
-  importFromFile(content: string, data: any) {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.json';
-    fileInput.onchange = async (event: Event) => {
-      const target = event.target as HTMLInputElement;
-      if (target.files && target.files.length > 0) {
-        const file = target.files[0];
-        const reader = new FileReader();
-        reader.onload = async () => {
-          const trackedArtistsJson = reader.result as string;
-          const trackedArtists = JSON.parse(trackedArtistsJson);
-          await db.trackedArtists.clear();
-          await db.trackedArtists.bulkAdd(trackedArtists);
-          //this.loadTrackedArtists();
-        };
-        reader.readAsText(file);
-      }
-    };
-    fileInput.click();
+  private importFromFile(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = '.json';
+      fileInput.onchange = async (event: Event) => {
+        const target = event.target as HTMLInputElement;
+        if (target.files && target.files.length > 0) {
+          const file = target.files[0];
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsText(file);
+        } else {
+          reject(new Error('No file selected'));
+        }
+      };
+      fileInput.click();
+    });
   }
 
-  private importFromString(base64String: string): any {
-    const uncompressedData = atob(base64String);
-    return uncompressedData;
+   private async importFromString(): Promise<string> {
+    const base64String = prompt('Please enter the import string:');
+    if (!base64String) {
+      throw new Error('No string provided');
+    }
+    return atob(base64String);
   }
 
   private importFromQRCode() {
