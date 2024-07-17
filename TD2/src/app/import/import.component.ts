@@ -2,22 +2,24 @@ import { Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ExportChoiceComponent } from '../export-choice/export-choice.component';
+import { MatBottomSheet, MatBottomSheetModule } from '@angular/material/bottom-sheet';
+import { ImportSheetComponent } from './import-sheet/import-sheet.component';
 import { db } from '../db';
 import { decompress } from 'compress-json';
 
 @Component({
   selector: 'app-import',
   standalone: true,
-  imports: [MatButtonModule, MatDialogModule, ExportChoiceComponent ],
+  imports: [MatButtonModule, MatDialogModule, ExportChoiceComponent, ImportSheetComponent, MatButtonModule ],
   templateUrl: './import.component.html',
   styleUrl: './import.component.css'
 })
 export class ImportComponent {
-  readonly dialog = inject(MatDialog);
+   readonly dialog = inject(MatDialog);
+  readonly bottomSheet = inject(MatBottomSheet);
 
   openDialog() {
     const dialogRef = this.dialog.open(ExportChoiceComponent, {
-      //width: '300px',
       data: { mode: 'import' }
     });
 
@@ -37,7 +39,7 @@ export class ImportComponent {
           importedData = await this.importFromFile();
           break;
         case 'qrcode':
-          // open camera for mobile, file picker for desktop
+          importedData = await this.importFromQRCode();
           break;
         case 'string':
           importedData = await this.importFromString();
@@ -51,8 +53,6 @@ export class ImportComponent {
         await this.loadData(content, importedData);
         console.log("success");
       }
-
-      //this.openResultDialog(exportResultData);
     } catch (error) {
       console.error('Error during import:', error);
     }
@@ -109,7 +109,16 @@ export class ImportComponent {
     return atob(base64String);
   }
 
-  private importFromQRCode() {
-
+  private importFromQRCode(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const bottomSheetRef = this.bottomSheet.open(ImportSheetComponent);
+      bottomSheetRef.afterDismissed().subscribe(result => {
+        if (result) {
+          resolve(result);
+        } else {
+          reject('QR code scanning was cancelled');
+        }
+      });
+    });
   }
 }

@@ -1,0 +1,19 @@
+<div class="qr-scanner-container">
+      <video #video></video>
+      <div class="scanner-overlay" *ngIf="isScanning"></div>
+      <div class="controls">
+        <button mat-raised-button color="primary" (click)="toggleScanner()">
+          {{ isScanning ? 'Stop' : 'Start' }} Scanner
+        </button>
+        <mat-select [(ngModel)]="selectedCamera" (selectionChange)="changeCamera()">
+          <mat-option *ngFor="let camera of cameras" [value]="camera.id">
+            {{ camera.label }}
+          </mat-option>
+        </mat-select>
+        <button mat-raised-button color="accent" (click)="importImage()">
+          Import Image
+        </button>
+        <input type="file" #fileInput style="display: none" (change)="handleFileInput($event)" accept="image/*">
+        <button mat-raised-button color="warn" (click)="closeScanner()">Close</button>
+      </div>
+    </div>

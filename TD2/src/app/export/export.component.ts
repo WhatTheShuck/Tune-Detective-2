@@ -48,7 +48,7 @@ export class ExportComponent {
             this.showQRCodeSizeExceededWarning();
             return;
           }
-          exportResultData = { type: 'qrcode', data: compressedData.toString() };
+          exportResultData = { type: 'qrcode', data: JSON.stringify(compressedData)};
           break;
         case 'string':
           const exportString = this.exportToString(compressedData);

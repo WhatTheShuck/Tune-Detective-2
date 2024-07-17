@@ -16,7 +16,7 @@ import { db } from '../db';
 @Component({
   selector: 'app-releases',
   standalone: true,
-  imports: [CommonModule, MatListModule, MatButtonModule, MatIconModule, MatDialogModule, HttpClientModule, HttpClientJsonpModule, TrackChooserComponent, ImportComponent, ExportComponent],
+  imports: [CommonModule, MatListModule, MatButtonModule, MatIconModule, MatDialogModule, HttpClientModule, HttpClientJsonpModule, TrackChooserComponent, ImportComponent, ExportComponent ],
   templateUrl: './releases.component.html',
   styleUrl: './releases.component.css'
 })
