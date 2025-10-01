@@ -1,27 +1,19 @@
-//TODO: Fix width for non-mobile layout
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Play, Clock, ArrowLeft } from "lucide-react";
+import { Loader2, Play, Clock } from "lucide-react";
 import { Album, Track } from "@/lib/types";
 import { ResponsiveModal } from "./responsive-dialog";
-
-// Define Track type if not already in types
-interface ExtendedTrack extends Track {
-  duration: number; // in seconds
-  preview?: string; // URL for 30-second preview
-  track_position: number;
-}
 
 interface AlbumTracksDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   album: Album | null;
-  tracks: ExtendedTrack[];
+  tracks: Track[];
   isLoading: boolean;
   error: string | null;
   onBack: () => void;
-  onPlayPreview: (track: ExtendedTrack) => void;
+  onPlayPreview: (track: Track) => void;
   onRetry: () => void;
 }
 
@@ -54,56 +46,37 @@ export function AlbumTracksDialog({
   const totalDuration = tracks.reduce((sum, track) => sum + track.duration, 0);
   const totalMinutes = Math.floor(totalDuration / 60);
 
-  const title = album ? `Tracks - ${album.title}` : "Tracks";
-
   return (
     <ResponsiveModal
       open={open}
       onOpenChange={onOpenChange}
-      title={title}
+      title={album ? `Tracks - ${album.title}` : "Tracks"}
       maxWidth="max-w-3xl"
-      hideTitle={true}
+      showBackButton={true}
+      onBack={onBack}
     >
-      {/* Custom header */}
-      <div className="flex items-start gap-4 mb-6 pb-4 border-b min-w-0">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onBack}
-          className="mt-2 shrink-0"
-        >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Back
-        </Button>
+      {album && (
+        <div className="flex gap-4 mb-6 p-4 bg-muted/50 rounded-lg">
+          <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+            <img
+              src={album.cover_medium || "/placeholder-album.jpg"}
+              alt={album.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
 
-        {album && (
-          <div className="flex-1 flex gap-4 min-w-0">
-            <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-              <img
-                src={album.cover_medium || "/placeholder-album.jpg"}
-                alt={album.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold truncate">{album.title}</h2>
-              <p className="text-muted-foreground mb-2 truncate">
-                {formatReleaseDate(album.release_date)}
-              </p>
-              <div className="flex gap-3 text-sm text-muted-foreground">
-                <span className="whitespace-nowrap">
-                  {tracks.length} tracks
-                </span>
-                <span className="whitespace-nowrap">
-                  {totalMinutes} minutes
-                </span>
-              </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl font-bold truncate">{album.title}</h2>
+            <p className="text-muted-foreground mb-2 truncate">
+              {formatReleaseDate(album.release_date)}
+            </p>
+            <div className="flex gap-3 text-sm text-muted-foreground">
+              <span className="whitespace-nowrap">{tracks.length} tracks</span>
+              <span className="whitespace-nowrap">{totalMinutes} minutes</span>
             </div>
           </div>
-        )}
-      </div>
-
+        </div>
+      )}
       {isLoading ? (
         <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin" />
@@ -117,7 +90,7 @@ export function AlbumTracksDialog({
           </Button>
         </div>
       ) : (
-        <ScrollArea className="h-[400px]">
+        <ScrollArea>
           <div className="space-y-2 pr-4">
             {tracks.map((track, index) => (
               <div
@@ -132,7 +105,7 @@ export function AlbumTracksDialog({
 
                 {/* Track info */}
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium truncate group-hover:text-primary">
+                  <h4 className="font-medium group-hover:text-primary truncate">
                     {track.title}
                   </h4>
                   <div className="flex items-center gap-2 mt-1">
@@ -140,11 +113,6 @@ export function AlbumTracksDialog({
                       <Clock className="h-3 w-3 mr-1" />
                       {formatDuration(track.duration)}
                     </Badge>
-                    {track.rank && (
-                      <span className="text-xs text-muted-foreground truncate">
-                        Rank: {track.rank}
-                      </span>
-                    )}
                   </div>
                 </div>
 

@@ -2,7 +2,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Eye, Grid3X3, List, ArrowLeft } from "lucide-react";
+import { Loader2, Eye } from "lucide-react";
 import { Artist, Album } from "@/lib/types";
 import { ResponsiveModal } from "./responsive-dialog";
 import { useState } from "react";
@@ -36,7 +36,7 @@ export function AlbumSelectionDialog({
   onAlbumSelect,
   onRetry,
 }: AlbumSelectionDialogProps) {
-  const [isCompact, setIsCompact] = useState(false);
+  const [isCompact, setIsCompact] = useState(true);
 
   const formatReleaseDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -46,8 +46,6 @@ export function AlbumSelectionDialog({
       year: "numeric",
     });
   };
-
-  const title = artist ? `Albums by ${artist.name}` : "Albums";
 
   const renderCompactView = () => (
     <div className="grid gap-3 p-1">
@@ -173,60 +171,21 @@ export function AlbumSelectionDialog({
     <ResponsiveModal
       open={open}
       onOpenChange={onOpenChange}
-      title={title}
+      title={artist ? `Albums by ${artist.name}` : "Albums"}
       maxWidth="max-w-4xl"
-      hideTitle={!!artist}
+      showBackButton={true}
+      onBack={onBack}
+      showViewToggle={true}
+      isCompact={isCompact}
+      onViewToggle={setIsCompact}
     >
-      {/* Custom header for artist */}
-      {artist && (
-        <div className="flex items-centre justify-between gap-3 mb-4 pb-4 border-b">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="mt-2 shrink-0"
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
-          <div className="flex items-centre gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={artist.picture_medium} alt={artist.name} />
-              <AvatarFallback>{artist.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <h2 className="text-xl font-semibold">Albums by {artist.name}</h2>
-          </div>
-
-          {/* View toggle */}
-          <div className="flex items-centre">
-            <Button
-              variant={!isCompact ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setIsCompact(false)}
-              className="p-2 h-8 w-8 rounded-r-none"
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-
-            <Button
-              variant={isCompact ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setIsCompact(true)}
-              className="p-2 h-8 w-8 rounded-l-none border-l-0"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
-
       {isLoading ? (
-        <div className="flex items-centre justify-centre h-64">
+        <div className="flex items-center justify-center h-64">
           <Loader2 className="h-8 w-8 animate-spin" />
           <span className="ml-2">Loading albums...</span>
         </div>
       ) : error ? (
-        <div className="text-centre py-8">
+        <div className="text-center py-8">
           <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
           <Button variant="outline" onClick={onRetry}>
             Try Again
