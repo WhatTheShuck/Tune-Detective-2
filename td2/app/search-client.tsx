@@ -10,8 +10,9 @@ import { Artist, Album, Track } from "@/lib/types";
 import {
   searchArtists,
   getArtistAlbums,
-  getAlbumTracks, // You'll need to implement this API function
+  getAlbumTracks,
 } from "@/lib/deezer-api";
+import { db } from "@/db";
 
 // Import the dialog components
 import { ArtistSelectionDialog } from "@/components/dialogs/artist-select-dialog";
@@ -67,6 +68,11 @@ export default function SearchClient() {
   const [showAlbums, setShowAlbums] = useState(false);
   const [showTracks, setShowTracks] = useState(false);
 
+  // Track which artists are already being tracked
+  const [trackedArtistIds, setTrackedArtistIds] = useState<Set<number>>(
+    new Set(),
+  );
+
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Focus search input on mount
@@ -75,6 +81,20 @@ export default function SearchClient() {
       searchInputRef.current.focus();
     }
   }, []);
+
+  // Load tracked artists when component mounts
+  useEffect(() => {
+    loadTrackedArtists();
+  }, []);
+
+  const loadTrackedArtists = async () => {
+    try {
+      const tracked = await db.trackedArtists.toArray();
+      setTrackedArtistIds(new Set(tracked.map((artist) => artist.id)));
+    } catch (error) {
+      console.error("Failed to load tracked artists:", error);
+    }
+  };
 
   const handleSearch = async () => {
     if (!searchState.query.trim()) return;
@@ -110,13 +130,33 @@ export default function SearchClient() {
   };
 
   const handleTrackArtist = async (artist: Artist) => {
-    // TODO: Implement artist tracking logic
-    console.log("Tracking artist:", artist);
-    // For now, just close the dialog
-    setShowArtists(false);
+    try {
+      const isTracked = trackedArtistIds.has(artist.id);
 
-    // You might want to show a toast notification here
-    // toast({ title: `Now tracking ${artist.name}!` });
+      if (isTracked) {
+        // Untrack the artist
+        await db.trackedArtists.delete(artist.id);
+        setTrackedArtistIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(artist.id);
+          return newSet;
+        });
+      } else {
+        // Track the artist
+        await db.trackedArtists.add({
+          id: artist.id,
+          name: artist.name,
+          picture_medium: artist.picture_medium,
+          dateAdded: new Date().toISOString(),
+          nb_fan: artist.nb_fan,
+          nb_album: artist.nb_album,
+        });
+        setTrackedArtistIds((prev) => new Set(prev).add(artist.id));
+      }
+    } catch (error) {
+      console.error("Failed to track/untrack artist:", error);
+      // Optionally show a toast notification here
+    }
   };
 
   const handleArtistSelect = async (artist: Artist) => {
@@ -329,6 +369,7 @@ export default function SearchClient() {
         searchQuery={searchState.query}
         onArtistSelect={handleArtistSelect}
         onTrackArtist={handleTrackArtist}
+        trackedArtistIds={trackedArtistIds}
       />
 
       {/* Album Selection Dialog */}
