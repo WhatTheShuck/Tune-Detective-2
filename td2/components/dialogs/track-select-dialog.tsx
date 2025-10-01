@@ -1,7 +1,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Play, Clock } from "lucide-react";
+import { Loader2, Play, Pause, Clock } from "lucide-react";
 import { Album, Track } from "@/lib/types";
 import { ResponsiveModal } from "./responsive-dialog";
 
@@ -12,6 +12,7 @@ interface AlbumTracksDialogProps {
   tracks: Track[];
   isLoading: boolean;
   error: string | null;
+  playingTrackId?: number;
   onBack: () => void;
   onPlayPreview: (track: Track) => void;
   onRetry: () => void;
@@ -24,6 +25,7 @@ export function AlbumTracksDialog({
   tracks,
   isLoading,
   error,
+  playingTrackId,
   onBack,
   onPlayPreview,
   onRetry,
@@ -127,8 +129,16 @@ export function AlbumTracksDialog({
                   disabled={!track.preview}
                   className="opacity-60 group-hover:opacity-100 transition-opacity shrink-0"
                 >
-                  <Play className="h-4 w-4" />
-                  <span className="sr-only">Play preview</span>
+                  {playingTrackId === track.id ? (
+                    <Pause className="h-4 w-4" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                  <span className="sr-only">
+                    {playingTrackId === track.id
+                      ? "Pause preview"
+                      : "Play preview"}
+                  </span>
                 </Button>
               </div>
             ))}

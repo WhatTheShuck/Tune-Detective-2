@@ -38,6 +38,7 @@ interface TrackState {
   tracks: Track[];
   isLoading: boolean;
   error: string | null;
+  playingTrackId?: number;
 }
 
 export default function SearchClient() {
@@ -184,21 +185,38 @@ export default function SearchClient() {
     }
   };
 
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const handlePlayPreview = (track: Track) => {
-    // TODO: Implement audio preview playback
-    console.log("Playing preview for:", track);
+    if (!track.preview) return;
 
-    // Example implementation:
-    if (track.preview) {
-      const audio = new Audio(track.preview);
-      audio.play();
-      if (!showTracks) {
-        audio.pause();
-      }
+    // If there's already audio playing
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setTrackState((prev) => ({ ...prev, playingTrackId: undefined }));
+      return;
     }
+
+    // Start playing new audio
+    const audio = new Audio(track.preview);
+    audioRef.current = audio;
+    setTrackState((prev) => ({ ...prev, playingTrackId: track.id }));
+
+    audio.play();
+
+    // Clean up when audio ends
+    audio.addEventListener("ended", () => {
+      audioRef.current = null;
+      setTrackState((prev) => ({ ...prev, playingTrackId: undefined }));
+    });
   };
 
   const handleBackToAlbums = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setTrackState((prev) => ({ ...prev, playingTrackId: undefined }));
     setShowTracks(false);
     setShowAlbums(true);
   };
@@ -329,11 +347,19 @@ export default function SearchClient() {
       {/* Album Tracks Dialog */}
       <AlbumTracksDialog
         open={showTracks}
-        onOpenChange={setShowTracks}
+        onOpenChange={(open) => {
+          if (!open && audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current = null;
+            setTrackState((prev) => ({ ...prev, playingTrackId: undefined }));
+          }
+          setShowTracks(open);
+        }}
         album={albumState.selectedAlbum}
         tracks={trackState.tracks}
         isLoading={trackState.isLoading}
         error={trackState.error}
+        playingTrackId={trackState.playingTrackId}
         onBack={handleBackToAlbums}
         onPlayPreview={handlePlayPreview}
         onRetry={retryTracks}
