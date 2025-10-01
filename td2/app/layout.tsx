@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import Header from "@/components/header";
 import { BottomNav } from "@/components/nav/bottom-nav";
+import { SearchProvider } from "@/components/providers/search-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,9 +46,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Header />
-          {children}
-          <BottomNav />
+          <SearchProvider>
+            <Header />
+            {children}
+            <BottomNav />
+          </SearchProvider>
         </ThemeProvider>
       </body>
     </html>

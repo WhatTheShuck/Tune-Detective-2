@@ -1,9 +1,7 @@
-//TODO: add command K and history and search queries to db
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, Loader2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Search, Loader2, Command as CommandIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Artist, Album, Track } from "@/lib/types";
@@ -18,6 +16,7 @@ import { db } from "@/db";
 import { ArtistSelectionDialog } from "@/components/dialogs/artist-select-dialog";
 import { AlbumSelectionDialog } from "@/components/dialogs/album-select-dialog";
 import { AlbumTracksDialog } from "@/components/dialogs/track-select-dialog";
+import { useSearch } from "@/components/providers/search-provider";
 
 // Component-specific types
 interface SearchState {
@@ -42,7 +41,11 @@ interface TrackState {
   playingTrackId?: number;
 }
 
-export default function SearchClient() {
+export default function SearchClient({
+  initialQuery = "",
+}: {
+  initialQuery?: string;
+}) {
   const [searchState, setSearchState] = useState<SearchState>({
     query: "",
     isSearching: false,
@@ -68,24 +71,24 @@ export default function SearchClient() {
   const [showAlbums, setShowAlbums] = useState(false);
   const [showTracks, setShowTracks] = useState(false);
 
+  const { openSearch } = useSearch();
+
   // Track which artists are already being tracked
   const [trackedArtistIds, setTrackedArtistIds] = useState<Set<number>>(
     new Set(),
   );
 
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  // Focus search input on mount
-  useEffect(() => {
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, []);
-
   // Load tracked artists when component mounts
   useEffect(() => {
     loadTrackedArtists();
   }, []);
+
+  // Handle initial query from URL
+  useEffect(() => {
+    if (initialQuery) {
+      handleSearch(initialQuery);
+    }
+  }, [initialQuery]);
 
   const loadTrackedArtists = async () => {
     try {
@@ -96,13 +99,18 @@ export default function SearchClient() {
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchState.query.trim()) return;
+  const handleSearch = async (query: string) => {
+    if (!query.trim()) return;
 
-    setSearchState((prev) => ({ ...prev, isSearching: true, error: null }));
+    setSearchState((prev) => ({
+      ...prev,
+      query,
+      isSearching: true,
+      error: null,
+    }));
 
     try {
-      const artists = await searchArtists(searchState.query);
+      const artists = await searchArtists(query);
 
       if (artists.length === 0) {
         setSearchState((prev) => ({
@@ -155,7 +163,6 @@ export default function SearchClient() {
       }
     } catch (error) {
       console.error("Failed to track/untrack artist:", error);
-      // Optionally show a toast notification here
     }
   };
 
@@ -266,23 +273,6 @@ export default function SearchClient() {
     setShowArtists(true);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  };
-
-  const resetSearch = () => {
-    setSearchState({
-      query: "",
-      isSearching: false,
-      results: [],
-      selectedArtist: null,
-      error: null,
-    });
-    setShowArtists(false);
-  };
-
   const retryAlbums = () => {
     if (searchState.selectedArtist) {
       handleArtistSelect(searchState.selectedArtist);
@@ -301,53 +291,39 @@ export default function SearchClient() {
       <div className="max-w-2xl mx-auto mb-12">
         <Card className="p-8 shadow-lg border-0 bg-card/50 backdrop-blur">
           <div className="space-y-6">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-              <Input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search for an artist..."
-                value={searchState.query}
-                onChange={(e) =>
-                  setSearchState((prev) => ({
-                    ...prev,
-                    query: e.target.value,
-                    error: null,
-                  }))
-                }
-                onKeyDown={handleKeyPress}
-                className="pl-12 h-14 text-lg border-0 bg-background/50 focus-visible:ring-2 focus-visible:ring-primary/20"
-              />
-              {searchState.query && (
-                <Button
-                  onClick={resetSearch}
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                >
-                  ✕
-                </Button>
-              )}
-            </div>
-
             <Button
-              onClick={handleSearch}
-              disabled={searchState.isSearching || !searchState.query.trim()}
-              className="w-full h-12 text-lg font-medium"
-              size="lg"
+              onClick={openSearch}
+              variant="outline"
+              className="w-full h-14 text-lg flex items-center justify-between border-0 bg-background/50 hover:bg-background/70 transition-colours px-4"
             >
-              {searchState.isSearching ? (
-                <>
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  Searching...
-                </>
-              ) : (
-                <>
-                  <Search className="h-5 w-5 mr-2" />
-                  Search Artists
-                </>
-              )}
+              <span className="flex items-center gap-3 text-muted-foreground">
+                <Search className="h-5 w-5 shrink-0" />
+                <span>Search for an artist...</span>
+              </span>
+              <kbd className="pointer-events-none inline-flex h-6 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[16px] font-medium opacity-100 shrink-0">
+                <span className="text-s">⌘</span>K
+              </kbd>
             </Button>
+
+            {/* Show current search query and loading state */}
+            {searchState.query && (
+              <div className="text-centre">
+                <p className="text-sm text-muted-foreground mb-2">
+                  Searching for:{" "}
+                  <span className="font-medium text-foreground">
+                    {searchState.query}
+                  </span>
+                </p>
+                {searchState.isSearching && (
+                  <div className="flex items-centre justify-centre gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-sm text-muted-foreground">
+                      Searching...
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Simple error display */}
             {searchState.error && (

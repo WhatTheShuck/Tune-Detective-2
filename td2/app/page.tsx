@@ -12,8 +12,13 @@ async function getSearchStats() {
   };
 }
 
-export default async function SearchPage() {
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: { q?: string };
+}) {
   const stats = await getSearchStats();
+  const initialQuery = searchParams.q || "";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
@@ -33,7 +38,7 @@ export default async function SearchPage() {
         </div>
 
         {/* Search Section - Client Component */}
-        <SearchClient />
+        <SearchClient initialQuery={initialQuery} />
 
         {/* Stats Section - Server Rendered with Dynamic Data */}
         <div className="max-w-4xl mx-auto mt-12">
