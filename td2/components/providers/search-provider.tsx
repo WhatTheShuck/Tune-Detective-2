@@ -2,8 +2,16 @@
 
 import { createContext, useContext, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { SearchCommand } from "@/components/search-command";
-import { searchArtists } from "@/lib/deezer-api";
+import dynamic from "next/dynamic";
+
+// Dynamically import SearchCommand with no SSR
+const SearchCommand = dynamic(
+  () =>
+    import("@/components/search-command").then((mod) => ({
+      default: mod.SearchCommand,
+    })),
+  { ssr: false },
+);
 
 interface SearchContextType {
   openSearch: () => void;
@@ -16,8 +24,6 @@ export function SearchProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   const handleSearch = async (query: string) => {
-    // Navigate to search page with the query
-    // The search page will handle the actual search
     router.push(`/?q=${encodeURIComponent(query)}`);
   };
 

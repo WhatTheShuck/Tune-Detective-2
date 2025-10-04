@@ -15,10 +15,11 @@ async function getSearchStats() {
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: { q?: string };
+  searchParams: Promise<{ q?: string }>;
 }) {
   const stats = await getSearchStats();
-  const initialQuery = searchParams.q || "";
+  const params = await searchParams;
+  const initialQuery = params.q || "";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
