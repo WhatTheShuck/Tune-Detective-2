@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   RefreshCw,
   Music,
@@ -15,27 +15,28 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Album, Track, TrackedArtist } from "@/lib/types";
+import { Album, Track } from "@/lib/types";
+import { db, TrackedArtist } from "@/db";
 import {
-  getArtistsLatestAlbums,
+  getArtistAlbums,
   getAlbumTracks,
-  formatDuration,
   formatReleaseDate,
 } from "@/lib/deezer-api";
+import { AlbumTracksDialog } from "@/components/dialogs/track-select-dialog";
 
 // Component-specific types
 interface LoadingState {
   isLoading: boolean;
   progress: number;
   total: number;
+}
+
+interface TrackState {
+  tracks: Track[];
+  isLoading: boolean;
+  error: string | null;
+  playingTrackId?: number;
 }
 
 interface ReleasesClientProps {
@@ -46,81 +47,49 @@ interface ReleasesClientProps {
   };
 }
 
-// Mock database functions - replace with your actual database implementation
-const db = {
-  trackedArtists: {
-    async toArray(): Promise<TrackedArtist[]> {
-      const stored = localStorage.getItem("trackedArtists");
-      return stored ? JSON.parse(stored) : [];
-    },
-
-    async add(artist: TrackedArtist): Promise<void> {
-      const current = await this.toArray();
-      const updated = [
-        ...current,
-        { ...artist, dateAdded: new Date().toISOString() },
-      ];
-      localStorage.setItem("trackedArtists", JSON.stringify(updated));
-    },
-
-    async remove(artistId: number): Promise<void> {
-      const current = await this.toArray();
-      const filtered = current.filter((a) => a.id !== artistId);
-      localStorage.setItem("trackedArtists", JSON.stringify(filtered));
-    },
-  },
-};
-
-// Simple cache implementation
-const cacheService = {
-  get<T>(key: string): T | null {
-    const cached = localStorage.getItem(`cache_${key}`);
-    if (!cached) return null;
-
-    try {
-      const data = JSON.parse(cached);
-      if (Date.now() > data.expiry) {
-        localStorage.removeItem(`cache_${key}`);
-        return null;
-      }
-      return data.value;
-    } catch {
-      return null;
-    }
-  },
-
-  set(key: string, value: any, ttl = 3600000): void {
-    // 1 hour default
-    localStorage.setItem(
-      `cache_${key}`,
-      JSON.stringify({
-        value,
-        expiry: Date.now() + ttl,
-      }),
-    );
-  },
-
-  clear(): void {
-    Object.keys(localStorage)
-      .filter((key) => key.startsWith("cache_"))
-      .forEach((key) => localStorage.removeItem(key));
-  },
-};
+interface AlbumWithArtist extends Album {
+  artist: {
+    id: number;
+    name: string;
+    picture_medium?: string;
+  };
+}
 
 export default function ReleasesClient({ initialData }: ReleasesClientProps) {
-  const [releases, setReleases] = useState<Album[]>([]);
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
+  const [releases, setReleases] = useState<AlbumWithArtist[]>([]);
+  const [selectedAlbum, setSelectedAlbum] = useState<AlbumWithArtist | null>(
+    null,
+  );
+  const [trackedArtistsCount, setTrackedArtistsCount] = useState(
+    initialData.trackedArtistsCount,
+  );
   const [loadingState, setLoadingState] = useState<LoadingState>({
     isLoading: false,
     progress: 0,
     total: 0,
   });
+  const [trackState, setTrackState] = useState<TrackState>({
+    tracks: [],
+    isLoading: false,
+    error: null,
+    playingTrackId: undefined,
+  });
   const [showTracks, setShowTracks] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     loadTrackedArtists();
+  }, []);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
   }, []);
 
   const loadTrackedArtists = async (forceRefresh = false) => {
@@ -129,6 +98,7 @@ export default function ReleasesClient({ initialData }: ReleasesClientProps) {
 
     try {
       const trackedArtists = await db.trackedArtists.toArray();
+      setTrackedArtistsCount(trackedArtists.length);
 
       if (trackedArtists.length === 0) {
         setReleases([]);
@@ -138,10 +108,6 @@ export default function ReleasesClient({ initialData }: ReleasesClientProps) {
 
       setLoadingState((prev) => ({ ...prev, total: trackedArtists.length }));
 
-      if (forceRefresh) {
-        cacheService.clear();
-      }
-
       // Process artists in batches to avoid rate limiting
       const batchSize = 5;
       const batches: TrackedArtist[][] = [];
@@ -150,19 +116,69 @@ export default function ReleasesClient({ initialData }: ReleasesClientProps) {
         batches.push(trackedArtists.slice(i, i + batchSize));
       }
 
-      const allReleases: Album[] = [];
+      const allReleases: AlbumWithArtist[] = [];
 
       for (const batch of batches) {
-        const artistIds = batch.map((artist) => artist.id);
-
         try {
-          const latestAlbums = await getArtistsLatestAlbums(artistIds);
-          allReleases.push(...latestAlbums);
+          // Process each artist in the batch
+          for (const artist of batch) {
+            let albumWithArtist: AlbumWithArtist | null = null;
 
-          setLoadingState((prev) => ({
-            ...prev,
-            progress: prev.progress + batch.length,
-          }));
+            // Check if we should update from API or use cached data
+            if (
+              forceRefresh ||
+              (await db.shouldUpdateArtistRelease(artist.id, 24))
+            ) {
+              // Fetch fresh data from API
+              const albums = await getArtistAlbums(artist.id);
+
+              if (albums.length > 0) {
+                const latestAlbum = albums[0];
+
+                // Update database cache
+                await db.updateArtistRelease(
+                  artist.id,
+                  artist.name,
+                  latestAlbum,
+                );
+
+                // Create album with artist info
+                albumWithArtist = {
+                  ...latestAlbum,
+                  artist: {
+                    id: artist.id,
+                    name: artist.name,
+                    picture_medium: artist.picture_medium,
+                  },
+                };
+              } else {
+                // No albums found, update cache with null
+                await db.updateArtistRelease(artist.id, artist.name, undefined);
+              }
+            } else {
+              // Use cached data
+              const cachedRelease = await db.getArtistRelease(artist.id);
+              if (cachedRelease?.latestAlbum) {
+                albumWithArtist = {
+                  ...cachedRelease.latestAlbum,
+                  artist: {
+                    id: artist.id,
+                    name: artist.name,
+                    picture_medium: artist.picture_medium,
+                  },
+                };
+              }
+            }
+
+            if (albumWithArtist) {
+              allReleases.push(albumWithArtist);
+            }
+
+            setLoadingState((prev) => ({
+              ...prev,
+              progress: prev.progress + 1,
+            }));
+          }
         } catch (batchError) {
           console.error("Error processing batch:", batchError);
           // Continue with other batches
@@ -173,6 +189,13 @@ export default function ReleasesClient({ initialData }: ReleasesClientProps) {
           await new Promise((resolve) => setTimeout(resolve, 200));
         }
       }
+
+      // Sort by release date (newest first)
+      allReleases.sort(
+        (a, b) =>
+          new Date(b.release_date).getTime() -
+          new Date(a.release_date).getTime(),
+      );
 
       setReleases(allReleases);
     } catch (error) {
@@ -187,16 +210,89 @@ export default function ReleasesClient({ initialData }: ReleasesClientProps) {
     loadTrackedArtists(true);
   };
 
-  const openTrackChooser = async (album: Album) => {
+  const openTrackChooser = async (album: AlbumWithArtist) => {
     setSelectedAlbum(album);
+    setTrackState({
+      tracks: [],
+      isLoading: true,
+      error: null,
+      playingTrackId: undefined,
+    });
+    setShowTracks(true);
+
+    // Stop any playing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
 
     try {
       const trackList = await getAlbumTracks(album.id);
-      setTracks(trackList);
-      setShowTracks(true);
+      setTrackState((prev) => ({
+        ...prev,
+        tracks: trackList,
+        isLoading: false,
+      }));
     } catch (error) {
       console.error("Error loading tracks:", error);
-      setError("Failed to load tracks for this album.");
+      setTrackState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: "Failed to load tracks for this album.",
+      }));
+    }
+  };
+
+  const handlePlayPreview = (track: Track) => {
+    if (!track.preview) return;
+
+    // If the same track is playing, pause it
+    if (audioRef.current && trackState.playingTrackId === track.id) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setTrackState((prev) => ({ ...prev, playingTrackId: undefined }));
+      return;
+    }
+
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    // Start playing new audio
+    const audio = new Audio(track.preview);
+    audioRef.current = audio;
+    setTrackState((prev) => ({ ...prev, playingTrackId: track.id }));
+    audio.play();
+
+    // Clean up when audio ends
+    audio.addEventListener("ended", () => {
+      audioRef.current = null;
+      setTrackState((prev) => ({ ...prev, playingTrackId: undefined }));
+    });
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setShowTracks(open);
+    if (!open) {
+      // Stop any playing audio when dialog closes
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setTrackState({
+        tracks: [],
+        isLoading: false,
+        error: null,
+        playingTrackId: undefined,
+      });
+    }
+  };
+
+  const handleRetryTracks = () => {
+    if (selectedAlbum) {
+      openTrackChooser(selectedAlbum);
     }
   };
 
@@ -229,6 +325,11 @@ export default function ReleasesClient({ initialData }: ReleasesClientProps) {
           {releases.length > 0 && (
             <Badge variant="secondary">{releases.length} releases</Badge>
           )}
+          {trackedArtistsCount > 0 && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Tracking {trackedArtistsCount} artists
+            </p>
+          )}
           {loadingState.isLoading && (
             <p className="text-sm text-muted-foreground mt-1">
               Loading... ({loadingState.progress}/{loadingState.total})
@@ -258,7 +359,7 @@ export default function ReleasesClient({ initialData }: ReleasesClientProps) {
         </div>
       </div>
 
-      {/* Simple error display */}
+      {/* Error display */}
       {error && (
         <div className="bg-red-50 dark:bg-red-950/10 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
           <div className="flex items-center gap-2">
@@ -362,59 +463,18 @@ export default function ReleasesClient({ initialData }: ReleasesClientProps) {
       )}
 
       {/* Track Selection Dialog */}
-      <Dialog open={showTracks} onOpenChange={setShowTracks}>
-        <DialogContent className="max-w-3xl max-h-[80vh]">
-          <DialogHeader className="flex flex-row items-center gap-3 pb-4">
-            <Avatar className="h-12 w-12 rounded-md">
-              <AvatarImage
-                src={selectedAlbum?.cover_medium || selectedAlbum?.cover}
-                alt={selectedAlbum?.title}
-              />
-              <AvatarFallback className="rounded-md">🎵</AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <DialogTitle className="text-left">
-                {selectedAlbum?.title}
-              </DialogTitle>
-              <p className="text-sm text-muted-foreground">
-                by {selectedAlbum?.artist.name}
-              </p>
-            </div>
-          </DialogHeader>
-
-          <ScrollArea className="h-[400px]">
-            <div className="space-y-2">
-              {tracks.map((track, index) => (
-                <div
-                  key={track.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent transition-colors group"
-                >
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted text-sm font-medium group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                    {index + 1}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium truncate">{track.title}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDuration(track.duration)}
-                    </p>
-                  </div>
-
-                  {track.preview && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Play className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
+      <AlbumTracksDialog
+        open={showTracks}
+        onOpenChange={handleDialogClose}
+        album={selectedAlbum}
+        tracks={trackState.tracks}
+        isLoading={trackState.isLoading}
+        error={trackState.error}
+        playingTrackId={trackState.playingTrackId}
+        onBack={() => handleDialogClose(false)}
+        onPlayPreview={handlePlayPreview}
+        onRetry={handleRetryTracks}
+      />
     </>
   );
 }
