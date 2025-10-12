@@ -1,0 +1,13 @@
+services:
+  next-app:
+    container_name: TuneDetective-2
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+    ports:
+      - "7777:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    restart: unless-stopped

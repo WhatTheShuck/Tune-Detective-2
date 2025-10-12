@@ -20,38 +20,18 @@ This application will still be worked on in my spare time (🤣), however, if yo
 git clone https://github.com/WhatTheShuck/Tune-Detective-2
 ```
 
-- Install dependencies
-
-```
-npm i
-```
-
 - Build the App
 
 ```
-ng build --c production
+sudo docker compose build
 ```
 
-- Use Nginx or similar to host the app.
-
-# How to install - No PWA coolness
-
-- Clone the repo
+- Run the App
 
 ```
-git clone https://github.com/WhatTheShuck/Tune-Detective-2
+sudo docker compose up -d
 ```
 
-- Install dependencies
+- Access the App at http://$YOUR_IP_ADDRESS:7777
 
-```
-npm i
-```
-
-- Run the app locally
-
-```
-ng serve
-```
-
-- Be sad because you can't install it as a PWA
+- You will also need to access it via https to get PWA installation and camera access. I recommend Caddy as an easy reverse proxy, but you can use any reverse proxy you like.
