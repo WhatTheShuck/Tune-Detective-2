@@ -24,6 +24,12 @@ import {
   formatReleaseDate,
 } from "@/lib/deezer-api";
 import { AlbumTracksDialog } from "@/components/dialogs/track-select-dialog";
+import { useExport } from "@/hooks/use-export";
+import { useImport } from "@/hooks/use-import"; // Add this import
+import { ResponsiveModal } from "@/components/dialogs/responsive-dialog";
+import { ExportChoiceDialog } from "@/components/dialogs/export/export-choice-dialog";
+import { ExportResultDialog } from "@/components/dialogs/export/export-result-dialog";
+import { ImportChoiceDialog } from "@/components/dialogs/import/import-choice-dialog"; // Add this import
 
 // Component-specific types
 interface LoadingState {
@@ -77,6 +83,20 @@ export default function ReleasesClient({ initialData }: ReleasesClientProps) {
   const [showTracks, setShowTracks] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Export functionality
+  const {
+    isChoiceOpen,
+    setIsChoiceOpen,
+    isResultOpen,
+    setIsResultOpen,
+    resultData,
+    handleExport,
+    retryDownload,
+  } = useExport();
+
+  // Import functionality - ADD THIS
+  const { isImportOpen, setIsImportOpen, handleImport } = useImport();
 
   useEffect(() => {
     loadTrackedArtists();
@@ -210,6 +230,17 @@ export default function ReleasesClient({ initialData }: ReleasesClientProps) {
     loadTrackedArtists(true);
   };
 
+  // ADD THIS: Import success handler to refresh data
+  const handleImportSuccess = async (
+    content: string,
+    format: string,
+    data: string,
+  ) => {
+    await handleImport(content, format, data);
+    // Refresh the releases after successful import
+    await loadTrackedArtists(true);
+  };
+
   const openTrackChooser = async (album: AlbumWithArtist) => {
     setSelectedAlbum(album);
     setTrackState({
@@ -337,7 +368,12 @@ export default function ReleasesClient({ initialData }: ReleasesClientProps) {
           )}
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          {/* UPDATE THIS: Make the Import button functional */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsImportOpen(true)}
+          >
             <Upload className="h-4 w-4 mr-2" />
             Import
           </Button>
@@ -352,7 +388,11 @@ export default function ReleasesClient({ initialData }: ReleasesClientProps) {
             />
             Refresh
           </Button>
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsChoiceOpen(true)}
+          >
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -475,6 +515,48 @@ export default function ReleasesClient({ initialData }: ReleasesClientProps) {
         onPlayPreview={handlePlayPreview}
         onRetry={handleRetryTracks}
       />
+
+      {/* Import Choice Dialog - ADD THIS */}
+      <ResponsiveModal
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        title="Import Data"
+        maxWidth="max-w-md"
+      >
+        <ImportChoiceDialog
+          onImport={handleImportSuccess}
+          onCancel={() => setIsImportOpen(false)}
+        />
+      </ResponsiveModal>
+
+      {/* Export Choice Dialog */}
+      <ResponsiveModal
+        open={isChoiceOpen}
+        onOpenChange={setIsChoiceOpen}
+        title="Export Data"
+        maxWidth="max-w-md"
+      >
+        <ExportChoiceDialog
+          onExport={handleExport}
+          onCancel={() => setIsChoiceOpen(false)}
+        />
+      </ResponsiveModal>
+
+      {/* Export Result Dialog */}
+      <ResponsiveModal
+        open={isResultOpen}
+        onOpenChange={setIsResultOpen}
+        title="Export"
+        maxWidth="max-w-md"
+      >
+        {resultData && (
+          <ExportResultDialog
+            resultData={resultData}
+            onClose={() => setIsResultOpen(false)}
+            onRetryDownload={retryDownload}
+          />
+        )}
+      </ResponsiveModal>
     </>
   );
 }

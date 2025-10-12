@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import ReleasesClient from "./releases-client";
 
-// This would typically come from your database
 async function getInitialData() {
   // Example: get initial tracked artists count, cache status, etc.
   // This runs on the server, so you can do database queries here
@@ -20,7 +19,7 @@ export default async function ReleasesPage() {
   const initialData = await getInitialData();
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-2">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
