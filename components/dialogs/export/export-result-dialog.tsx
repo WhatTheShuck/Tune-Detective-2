@@ -99,7 +99,7 @@ export function ExportResultDialog({
           <div className="text-center">
             <h3 className="font-semibold mb-1">Scan to export</h3>
             <p className="text-sm text-muted-foreground">
-              Use your phone's camera to scan this code
+              Use your phone&apos;s camera to scan this code
             </p>
           </div>
           <Card>

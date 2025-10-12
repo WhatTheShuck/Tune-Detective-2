@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, Loader2, Command as CommandIcon } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Artist, Album, Track } from "@/lib/types";
@@ -132,7 +132,7 @@ export default function SearchClient({
       setSearchState((prev) => ({
         ...prev,
         isSearching: false,
-        error: "Search failed. Please check your connection and try again.",
+        error: `Search failed. Please check your connection and try again. Error: ${error}`,
       }));
     }
   };
@@ -194,7 +194,7 @@ export default function SearchClient({
       setAlbumState((prev) => ({
         ...prev,
         isLoading: false,
-        error: "Failed to load albums. Please try again.",
+        error: `Failed to load albums. Please try again. Error: ${error}`,
       }));
     }
   };
@@ -227,7 +227,7 @@ export default function SearchClient({
       setTrackState((prev) => ({
         ...prev,
         isLoading: false,
-        error: "Failed to load tracks. Please try again.",
+        error: `Failed to load tracks. Please try again. Error: ${error}`,
       }));
     }
   };

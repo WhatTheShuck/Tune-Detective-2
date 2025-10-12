@@ -94,7 +94,7 @@ export function AlbumTracksDialog({
       ) : (
         <ScrollArea>
           <div className="space-y-2 pr-4">
-            {tracks.map((track, index) => (
+            {tracks.map((track) => (
               <div
                 key={track.id}
                 className="flex items-center gap-4 p-3 rounded-lg hover:bg-accent transition-colors group cursor-pointer min-w-0"

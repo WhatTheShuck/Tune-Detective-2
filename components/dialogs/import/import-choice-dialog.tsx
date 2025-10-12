@@ -85,6 +85,7 @@ export function ImportChoiceDialog({
           stopCameraScanning();
         },
         (errorMessage) => {
+          console.log(errorMessage);
           // Error callback (can be ignored for continuous scanning)
         },
       );

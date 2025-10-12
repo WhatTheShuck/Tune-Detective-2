@@ -132,7 +132,7 @@ export function SearchCommand({
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{searchValue}</p>
                   <p className="text-sm text-muted-foreground">
-                    Search for "{searchValue}"
+                    Search for &quot;{searchValue}&quot;
                   </p>
                 </div>
               </CommandItem>
@@ -243,7 +243,7 @@ export function SearchCommand({
                 <div className="flex-1 min-w-0 text-left">
                   <p className="font-medium truncate">{searchValue}</p>
                   <p className="text-sm text-muted-foreground">
-                    Search for "{searchValue}"
+                    Search for &quot;{searchValue}&quot;
                   </p>
                 </div>
               </div>

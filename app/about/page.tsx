@@ -49,7 +49,7 @@ export default function AboutPage() {
                   </span>
                   . The original app used the Deezer API to fetch the latest
                   releases from artists, filling a crucial gap for music lovers
-                  who don't rely on traditional streaming platforms like
+                  who don&apos;t rely on traditional streaming platforms like
                   Spotify, Apple Music, Deezer, or [insert music streaming
                   service of choice here].
                 </p>
@@ -61,7 +61,7 @@ export default function AboutPage() {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">The Problem</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  For those of us who don't use mainstream music streaming
+                  For those of us who don&apos;t use mainstream music streaming
                   services, discovering new releases from our favourite artists
                   can be a real challenge. Tune Detective was the perfect
                   solution — it kept us in the loop without requiring
@@ -132,8 +132,8 @@ export default function AboutPage() {
                       Tune Detective X
                     </span>
                   </a>{" "}
-                  — a shiny new native app packed with cool new features that'll
-                  blow your mind.
+                  — a shiny new native app packed with cool new features
+                  that&apos;ll blow your mind.
                 </p>
                 <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                   <p className="text-sm text-blue-800 dark:text-blue-200 flex items-center gap-2">
@@ -152,9 +152,9 @@ export default function AboutPage() {
                   </p>
                 </div>
                 <p className="text-muted-foreground leading-relaxed text-sm">
-                  But hey, if you're a web person or just prefer self hosting,
-                  you're absolutely welcome here! This web version will continue
-                  to serve all you lovely web users. 🌐
+                  But hey, if you&apos;re a web person or just prefer self
+                  hosting, you&apos;re absolutely welcome here! This web version
+                  will continue to serve all you lovely web users. 🌐
                 </p>
               </div>
             </CardContent>
@@ -173,7 +173,7 @@ export default function AboutPage() {
                 </Badge>
               </CardTitle>
               <CardDescription>
-                What to expect and what's coming next
+                What to expect and what&apos;s coming next
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
