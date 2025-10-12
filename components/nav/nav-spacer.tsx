@@ -14,6 +14,7 @@ export function NavSpacer() {
       const isStandalone = window.matchMedia(
         "(display-mode: standalone)",
       ).matches;
+      // @ts-expect-error - iOS-specific standalone property
       const isIOS = window.navigator.standalone === true;
       setIsPWA(isStandalone || isIOS);
     };
